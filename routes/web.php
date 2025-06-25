@@ -5,9 +5,9 @@ use Inertia\Inertia;
 use App\Http\Controllers\ProgramController;
 use App\Models\Program;
 
-Route::get('/', function () {
-    return Inertia::render('Welcome');
-})->name('welcome');
+// Route::get('/', function () {
+//     return Inertia::render('Welcome');
+// })->name('welcome');
 
 Route::get('dashboard', function () {
     return Inertia::render('admin/Dashboard');
@@ -17,7 +17,7 @@ Route::get('dashboard', function () {
 /*
  Page d'Accueil
 */
-Route::get('/home', function(){
+Route::get('/', function(){
      $programs = Program::all();
         return Inertia::render('Template/Home/Index', [
             'programs' => $programs,
