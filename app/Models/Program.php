@@ -3,45 +3,50 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Program extends Model
 {
     protected $fillable = [
         'title',
         'description',
-        'region',
+        'region_id',
         'start_date',
         'end_date',
-        'form_structure',
         'status',
         'user_id',
     ];
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function applications()
+    public function applications(): HasMany
     {
         return $this->hasMany(Application::class);
     }
 
-    public function evaluationCriteria()
+    public function evaluationCriteria(): HasMany
     {
         return $this->hasMany(EvaluationCriteria::class);
     }
 
 
-    public function formFields()
+    public function formFields(): HasMany
     {
         return $this->hasMany(FormField::class);
     }
 
-    protected $casts = [
-        'form_structure' => 'json',
-        'start_date' => 'date',
-        'end_date' => 'date',
-    ];
+    public function region(): BelongsTo
+    {
+        return $this->belongsTo(Region::class);
+    }
+
+    // protected $casts = [
+    //     'start_date' => 'date',
+    //     'end_date' => 'date',
+    // ];
 
 }

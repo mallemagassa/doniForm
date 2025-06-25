@@ -4,19 +4,25 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue'
+
+const { props } = usePage()
+
+
+const panel = computed(() => props.panel ?? 'admin')
 
 const sidebarNavItems: NavItem[] = [
     {
         title: 'Profile',
-        href: '/settings/profile',
+        href: 'http://127.0.0.1:8000/admin/settings/profile',
     },
     {
         title: 'Password',
-        href: '/settings/password',
+        href: 'http://127.0.0.1:8000/admin/settings/password',
     },
     {
         title: 'Appearance',
-        href: '/settings/appearance',
+        href: 'http://127.0.0.1:8000/admin/settings/appearance',
     },
 ];
 

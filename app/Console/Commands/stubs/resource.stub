@@ -1,0 +1,105 @@
+<?php
+
+namespace App\Resources\{{panelN}};
+
+use App\Models\{{modelName}};
+use Inertia\Inertia;
+use App\Resources\Resource;
+use App\Resources\Builders\FormBuilder;
+use App\Resources\Builders\TableBuilder;
+use App\Resources\Concerns\HasResourceData;
+{{relationImports}}
+
+class {{resourceName}}Resource extends Resource
+{
+    use HasResourceData;
+    
+    protected static string $model = {{modelName}}::class;
+    protected static string $panel = '{{panel}}';
+    protected static string $label = '{{label}}';
+
+    {{relations}}
+
+    public static function index(): \Inertia\Response
+    {
+        $table = (new TableBuilder(static::$model))
+        {{tableColumns}}->make();
+
+        return Inertia::render(static::getComponentPath('index'), [
+            'table' => $table,
+            'resource' => static::getResourceData(),
+        ]);
+    }
+
+    public static function show($id): \Inertia\Response
+    {
+        $application = static::$model::with(array_keys((new static::$model)->getRelations()))
+            ->findOrFail($id);
+    
+        return Inertia::render(static::getComponentPath('show'), [
+            'application' => $application->loadMissing(array_keys($application->getRelations())),
+            'resource' => static::getResourceData($application),
+        ]);
+    }
+    
+    public static function create(): \Inertia\Response
+    {
+        $form = (new FormBuilder())
+        {{formFields}}->make();
+
+        return Inertia::render(static::getComponentPath('create'), [
+            'form' => $form,
+            'resource' => static::getResourceData(),
+        ]);
+    }
+
+    public static function store(): \Illuminate\Http\RedirectResponse
+    {
+        $data = request()->validate([
+            {{validationRules}}
+        ]);
+
+        static::$model::create($data);
+
+        return redirect()->route(static::getRouteName('index'));
+    }
+
+    public static function edit($id): \Inertia\Response
+    {
+        ${{modelVar}} = static::$model::findOrFail($id);
+
+        $form = (new FormBuilder())
+        {{formFieldsWithValues}}->make();
+
+        return Inertia::render(static::getComponentPath('edit'), [
+            '{{modelVar}}' => ${{modelVar}},
+            'form' => $form,
+            'resource' => static::getResourceData(${{modelVar}}),
+        ]);
+    }
+
+    public static function update($id): \Illuminate\Http\RedirectResponse
+    {
+        ${{modelVar}} = static::$model::findOrFail($id);
+    
+        $data = request()->validate([
+            {{updateValidationRules}}
+        ]);
+    
+        ${{modelVar}}->update($data);
+    
+        return redirect()->route(static::getRouteName('index'));
+    }
+
+    public static function destroy($id): \Illuminate\Http\RedirectResponse
+    {
+        ${{modelVar}} = static::$model::findOrFail($id);
+        ${{modelVar}}->delete();
+        return redirect()->route(static::getRouteName('index'));
+    }
+
+    protected static function getComponentPath(string $view): string
+    {
+        return static::$panel . '/Resources/' . class_basename(static::class) . '/' . $view;
+    }
+}
