@@ -15,10 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->text('description')->nullable();
-            $table->string('region')->nullable();
+            $table->foreignId('region_id')->constrained('regions')->onDelete('cascade');
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
-            $table->json('form_structure')->nullable();
             $table->enum('status', ['draft', 'published', 'archived'])->default('draft');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->timestamps();

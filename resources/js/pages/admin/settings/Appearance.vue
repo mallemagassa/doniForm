@@ -7,11 +7,18 @@ import { type BreadcrumbItem } from '@/types';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
+import { usePage } from '@inertiajs/vue3'
+import { computed } from 'vue'
+
+const { props } = usePage()
+
+
+const panel = computed(() => props.panel ?? 'admin')
 
 const breadcrumbItems: BreadcrumbItem[] = [
     {
         title: 'Appearance settings',
-        href: '/settings/appearance',
+        href: 'admin/settings/appearance',
     },
 ];
 </script>

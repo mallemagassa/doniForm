@@ -7,14 +7,29 @@ import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
 import { BookOpen, Folder, LayoutGrid } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
+import { usePage } from '@inertiajs/vue3'
+import { computed } from 'vue'
 
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: '/dashboard',
-        icon: LayoutGrid,
-    },
-];
+const { props } = usePage()
+
+
+const panel = computed(() => props.panel ?? 'admin')
+const resources = computed(() => props.resources ?? [])
+
+// console.log('Panel:', resources.value)
+
+const mainNavItems = computed<NavItem[]>(() => [
+  {
+    title: 'Dashboard',
+    href: `/${panel.value}`,
+    icon: LayoutGrid,
+  },
+  ...resources.value.map((resource: { label: string; routeName: string }) => ({
+    title: resource.label,
+    href: `/${panel.value}/${resource.routeName}`,
+    icon: Folder, // ou un mapping si tu veux une icône différente par ressource
+  })),
+])
 
 const footerNavItems: NavItem[] = [
     {
@@ -36,8 +51,9 @@ const footerNavItems: NavItem[] = [
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
-                        <Link :href="route('dashboard')">
-                            <AppLogo />
+                        <Link :href="route(`${panel}.dashboard`)">
+                            <!-- <AppLogo /> -->
+                            DONI FORM
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>

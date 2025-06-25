@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('form_fields', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('program_id')->constrained('programs')->onDelete('cascade');
+            $table->foreignId('form_program_id')->constrained('form_programs')->onDelete('cascade');
             $table->string('label');
             $table->enum('field_type', ['text', 'select', 'date', 'file', 'number', 'checkbox', 'radio', 'textarea']);
             $table->boolean('required')->default(false);

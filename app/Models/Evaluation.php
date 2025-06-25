@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Evaluation extends Model
 {
@@ -19,17 +20,17 @@ class Evaluation extends Model
         'comment' => 'string',
     ];
 
-    public function application()
+    public function application(): BelongsTo
     {
         return $this->belongsTo(Application::class);
     }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function criterion()
+    public function criterion(): BelongsTo
     {
         return $this->belongsTo(EvaluationCriteria::class);
     }

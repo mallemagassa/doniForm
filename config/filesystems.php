@@ -43,8 +43,11 @@ return [
             'root' => storage_path('app/public'),
             'url' => env('APP_URL').'/storage',
             'visibility' => 'public',
-            'throw' => false,
-            'report' => false,
+        ],
+    
+        'filepond-temp' => [
+            'driver' => 'local',
+            'root' => storage_path('app/filepond-temp'),
         ],
 
         's3' => [
