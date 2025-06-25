@@ -26,4 +26,12 @@ export default defineConfig({
             '@': path.resolve(__dirname, './resources/js'),
         },
     },
+    server: {
+        watch: {
+            usePolling: true,
+        },
+        host: 'localhost', // ou '0.0.0.0' si Docker
+        port: 5173, // ou un autre port si conflit
+        strictPort: true,
+    },
 });
