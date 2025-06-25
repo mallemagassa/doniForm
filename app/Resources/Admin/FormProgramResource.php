@@ -16,7 +16,7 @@ class FormProgramResource extends Resource
     
     protected static string $model = FormProgram::class;
     protected static string $panel = 'admin';
-    protected static string $label = 'Form Program';
+    public static string $label = 'Formulaires de programme';
 
     
     public static function programOptions(): array
@@ -93,7 +93,7 @@ class FormProgramResource extends Resource
             'program_id' => 'required|exists:programs,id',
             'form_fields' => 'nullable|array',
             'form_fields.*.label' => 'required|string',
-            'form_fields.*.field_type' => 'required|string|in:text,textarea,select,checkbox,radio',
+            'form_fields.*.field_type' => 'required|string|in:text,textarea,select,checkbox,radio,number,date,email',
             'form_fields.*.required' => 'boolean',
             'form_fields.*.options' => 'nullable|string',
         ]);
@@ -169,7 +169,7 @@ class FormProgramResource extends Resource
             'form_fields' => 'nullable|array',
             'form_fields.*.id' => 'nullable|exists:form_fields,id',
             'form_fields.*.label' => 'required|string',
-            'form_fields.*.field_type' => 'required|string|in:text,textarea,select,checkbox,radio',
+            'form_fields.*.field_type' => 'required|string|in:text,textarea,select,checkbox,radio,number,date,email',
             'form_fields.*.required' => 'boolean',
             'form_fields.*.options' => 'nullable|string',
         ]);

@@ -35,8 +35,12 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
 
         $defaultPanel = PanelServiceProvider::getDefaultPanel();
+
+        if (!Auth::user()->hasRole('Candidat')) {
+            return redirect()->intended(route("{$defaultPanel}.dashboard"));
+        }
     
-        return redirect()->intended(route("{$defaultPanel}.dashboard"));
+        return redirect()->intended(route("home"));
     }
 
     /**

@@ -16,7 +16,7 @@ class RegionResource extends Resource
     
     protected static string $model = Region::class;
     protected static string $panel = 'admin';
-    protected static string $label = 'Region';
+    public static string $label = 'Regions';
 
     
     public static function programsOptions(): array

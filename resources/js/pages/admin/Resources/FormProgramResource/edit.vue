@@ -17,12 +17,12 @@ const props = defineProps({
   formFields: Array
 })
 
-console.log(props.formFields.map(field => ({
-      id: field.id,
-      label: field.label,
-      field_type: field.field_type,
-      required: Boolean(field.required),
-      options:Array.isArray(field.options) })))
+// console.log(props.formFields.map(field => ({
+//       id: field.id,
+//       label: field.label,
+//       field_type: field.field_type,
+//       required: Boolean(field.required),
+//       options:Array.isArray(field.options) })))
 
 const form = useForm({
   ...Object.fromEntries(
@@ -143,7 +143,7 @@ function getSelectValue(id) {
       <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold">Modifier {{ resource.label }}</h1>
         <Link :href="resource.routes.index">
-          <Button variant="outline">
+          <Button variant="default">
             Retour à la liste
           </Button>
         </Link>
@@ -230,6 +230,10 @@ function getSelectValue(id) {
                       <SelectItem value="select">Liste déroulante</SelectItem>
                       <SelectItem value="checkbox">Case à cocher</SelectItem>
                       <SelectItem value="radio">Bouton radio</SelectItem>
+                      <SelectItem value="file">Fichier</SelectItem>
+                      <SelectItem value="date">Date</SelectItem>
+                      <SelectItem value="email">Email</SelectItem>
+                      <SelectItem value="number">nombre</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -283,7 +287,7 @@ function getSelectValue(id) {
             Enregistrer
           </Button>
           <Link :href="resource.routes.index">
-            <Button variant="outline">
+            <Button variant="default">
               Annuler
             </Button>
           </Link>

@@ -20,7 +20,7 @@ class ProgramResource extends Resource
     
     protected static string $model = Program::class;
     protected static string $panel = 'admin';
-    protected static string $label = 'Program';
+    public static string $label = 'Programmes';
 
     
     public static function userOptions(): array

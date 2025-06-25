@@ -1,0 +1,145 @@
+/* === Font Imports === */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Raleway:wght@400;700&display=swap');
+@import url('https://fonts.cdnfonts.com/css/bariol-bold');
+
+/* === Tailwind Core === */
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+/* === Source (Blade & PHP files) — facultatif ou ignoré selon le build === */
+/* @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php'; */
+/* @source '../../storage/framework/views/*.php'; */
+
+/* === Custom Variants === */
+@custom-variant dark (&:is(.dark *));
+
+/* === Theming with CSS variables === */
+@theme inline {
+  --font-title: 'Montserrat', 'Poppins', sans-serif;
+  --font-base: 'Bariol Bold', 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-link: 'Bariol Bold', 'Raleway', sans-serif;
+
+  --radius-lg: 0.5rem;
+  --radius-md: 0.375rem;
+  --radius-sm: 0.25rem;
+
+  --color-background: #f8f9fa;
+  --color-foreground: #212529;
+
+  --color-card: #ffffff;
+  --color-card-foreground: #212529;
+
+  --color-primary: #95b71d;
+  --color-primary-foreground: #ffffff;
+
+  --color-accent: #2755a1;
+  --color-accent-foreground: #ffffff;
+
+  --color-border: #dee2e6;
+  --color-input: #e9ecef;
+  --color-ring: #95b71d;
+
+  --sidebar-background: #ffffff;
+  --sidebar-foreground: #212529;
+  --sidebar-primary: #95b71d;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #2755a1;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #ced4da;
+  --sidebar-ring: #95b71d;
+}
+
+/* === Root Variables (can override @theme inline) === */
+:root {
+  --background: #f8f9fa;
+  --foreground: #212529;
+  --card: #ffffff;
+  --card-foreground: #212529;
+  --primary:  #95b71d;
+  --primary-foreground: #c61010;
+  --accent: #2755a1;
+  --accent-foreground: #ffffff;
+  --border: #dee2e6;
+  --input: #e9ecef;
+  --ring: #2755a1;
+
+  --font-title: 'Montserrat', 'Poppins', sans-serif;
+  --font-base: 'Bariol Bold', 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-link: 'Bariol Bold', 'Raleway', sans-serif;
+
+  --radius: 0.5rem;
+}
+
+/* === Dark mode (optionnel, à adapter si utilisé) === */
+.dark {
+  --background: #1e1e1e;
+  --foreground: #f1f3f5;
+  --card: #2a2a2a;
+  --card-foreground: #f1f3f5;
+  --primary: #95b71d;
+  --primary-foreground: #212529;
+  --accent: #2755a1;
+  --accent-foreground: #ffffff;
+  --border: #444c56;
+  --input: #3a3f44;
+  --ring: #95b71d;
+}
+
+/* === Compatibility Layer (Tailwind v3 > v4) === */
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-border, currentColor);
+  }
+}
+
+/* === Base Styling === */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html,
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-base);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-title);
+    color: var(--accent);
+  }
+
+  a {
+    font-family: var(--font-link);
+    color: var(--accent);
+    @apply underline-offset-2 transition-colors;
+  }
+
+  a:hover {
+    color: var(--primary);
+  }
+
+  button {
+    background-color: var(--primary);
+    color: var(--accent-foreground);
+    font-family: var(--font-base);
+    @apply px-4 py-2 rounded-md transition-colors;
+  }
+
+  button:hover {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+  }
+}
+
+/* === Utility layer override for font fallback (optional) === */
+@layer utilities {
+  body, html {
+    font-family: var(--font-base);
+  }
+}

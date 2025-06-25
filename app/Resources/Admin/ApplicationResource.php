@@ -20,7 +20,7 @@ class ApplicationResource extends Resource
     
     protected static string $model = Application::class;
     protected static string $panel = 'admin';
-    protected static string $label = 'Application';
+    protected static string $label = 'Applications';
 
     
     public static function programOptions(): array

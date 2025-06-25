@@ -86,7 +86,7 @@ const submitForm = async () => {
       <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold">Create {{ resource.label }}</h1>
         <Link :href="resource.routes.index">
-          <Button variant="outline">
+          <Button variant="default">
             Retour à la liste
           </Button>
         </Link>
@@ -172,6 +172,10 @@ const submitForm = async () => {
                       <SelectItem value="select">Liste déroulante</SelectItem>
                       <SelectItem value="checkbox">Case à cocher</SelectItem>
                       <SelectItem value="radio">Bouton radio</SelectItem>
+                      <SelectItem value="file">Fichier</SelectItem>
+                      <SelectItem value="date">Date</SelectItem>
+                      <SelectItem value="email">Email</SelectItem>
+                      <SelectItem value="number">nombre</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -226,7 +230,7 @@ const submitForm = async () => {
             Enregistrer
           </Button>
           <Link :href="resource.routes.index">
-            <Button variant="outline">
+            <Button variant="default">
               Annuler
             </Button>
           </Link>

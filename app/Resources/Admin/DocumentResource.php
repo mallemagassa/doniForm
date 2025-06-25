@@ -17,7 +17,7 @@ class DocumentResource extends Resource
     
     protected static string $model = Document::class;
     protected static string $panel = 'admin';
-    protected static string $label = 'Document';
+    public static string $label = 'Documents';
 
     
     public static function applicationOptions(): array

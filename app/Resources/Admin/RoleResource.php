@@ -17,7 +17,7 @@ class RoleResource extends Resource
     use HasResourceData;
     protected static string $model = Role::class;
     protected static string $panel = 'admin';
-    protected static string $label = 'Rôles';
+    public static string $label = 'Rôles';
 
     public static function index(): Response
     {

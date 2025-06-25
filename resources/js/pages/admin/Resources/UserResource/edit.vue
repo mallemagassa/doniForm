@@ -69,7 +69,7 @@ console.log('Form data:', form);
       <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold">Modifier {{ resource.label }}</h1>
         <Link :href="resource.routes.index">
-          <Button variant="outline">Retour à la liste</Button>
+          <Button variant="default">Retour à la liste</Button>
         </Link>
       </div>
 
@@ -138,7 +138,7 @@ console.log('Form data:', form);
         <div class="flex gap-2">
           <Button type="submit" :disabled="form.processing">Enregistrer</Button>
           <Link :href="resource.routes.index">
-            <Button variant="outline">Annuler</Button>
+            <Button variant="default">Annuler</Button>
           </Link>
         </div>
       </form>

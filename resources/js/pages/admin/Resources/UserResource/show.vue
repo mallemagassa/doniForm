@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card'
 
 const props = defineProps({
-  {{modelName}}: Object,
+  user: Object,
   resource: Object,
 })
 
@@ -32,11 +32,11 @@ function getStatusBadgeVariant(isActive) {
       <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold">Détails de la région</h1>
         <div class="flex gap-2">
-          <Link :href="`${resource.routes.edit.replace(':id', {{modelName}}.id)}`">
-            <Button variant="outline">Modifier</Button>
+          <Link :href="`${resource.routes.edit.replace(':id', user.id)}`">
+            <Button variant="default">Modifier</Button>
           </Link>
           <Link :href="resource.routes.index">
-            <Button variant="outline">Retour à la liste</Button>
+            <Button variant="default">Retour à la liste</Button>
           </Link>
         </div>
       </div>
@@ -45,7 +45,7 @@ function getStatusBadgeVariant(isActive) {
         <CardHeader>
           <CardTitle class="flex items-center gap-4">
             <span>  </span>
-            <Badge :variant="getStatusBadgeVariant({{modelName}}.is_active)">
+            <Badge :variant="getStatusBadgeVariant(user.is_active)">
               
             </Badge>
           </CardTitle>
@@ -71,7 +71,7 @@ function getStatusBadgeVariant(isActive) {
           <div class="space-y-1">
             <h3 class="text-sm font-medium text-gray-500">Statut</h3>
             <p class="text-sm">
-              <Badge :variant="getStatusBadgeVariant({{modelName}}.is_active)">
+              <Badge :variant="getStatusBadgeVariant(user.is_active)">
                 
                 
               </Badge>
@@ -81,12 +81,12 @@ function getStatusBadgeVariant(isActive) {
           <!-- Métadonnées -->
           <div class="space-y-1">
             <h3 class="text-sm font-medium text-gray-500">Date de création</h3>
-            <p class="text-sm">{{ formatDate({{modelName}}.created_at) }}</p>
+            <p class="text-sm">{{ formatDate(user.created_at) }}</p>
           </div>
 
           <div class="space-y-1">
             <h3 class="text-sm font-medium text-gray-500">Dernière modification</h3>
-            <p class="text-sm">{{ formatDate({{modelName}}.updated_at) }}</p>
+            <p class="text-sm">{{ formatDate(user.updated_at) }}</p>
           </div>
 
 

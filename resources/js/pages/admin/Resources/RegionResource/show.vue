@@ -33,10 +33,10 @@ function getStatusBadgeVariant(isActive) {
         <h1 class="text-2xl font-bold">Détails de la région</h1>
         <div class="flex gap-2">
           <Link :href="`${resource.routes.edit.replace(':id', region.id)}`">
-            <Button variant="outline">Modifier</Button>
+            <Button variant="default">Modifier</Button>
           </Link>
           <Link :href="resource.routes.index">
-            <Button variant="outline">Retour à la liste</Button>
+            <Button variant="default">Retour à la liste</Button>
           </Link>
         </div>
       </div>

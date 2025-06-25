@@ -17,7 +17,7 @@ class EvaluationCriteriaResource extends Resource
     
     protected static string $model = EvaluationCriteria::class;
     protected static string $panel = 'admin';
-    protected static string $label = 'Evaluation Criteria';
+    public static string $label = 'Evaluation Criteria';
 
     
     public static function programOptions(): array

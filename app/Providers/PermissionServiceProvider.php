@@ -24,7 +24,6 @@ class PermissionServiceProvider extends ServiceProvider
 
     public function boot()
     {
-        $this->registerPermissions();
         $this->registerPolicies();
     }
     
@@ -36,17 +35,4 @@ class PermissionServiceProvider extends ServiceProvider
         }
     }
     
-    protected function registerPermissions()
-    {
-        if (app()->runningInConsole()) return;
-    
-        foreach ($this->resources as $resource) {
-            foreach ($resource::getPermissionActions() as $action) {
-                Permission::firstOrCreate([
-                    'name' => "{$action} {$resource::getPermissionName()}",
-                    'guard_name' => 'web',
-                ]);
-            }
-        }
-    }
 }

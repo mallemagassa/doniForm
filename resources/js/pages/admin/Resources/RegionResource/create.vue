@@ -46,7 +46,7 @@ function submitForm() {
       <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold">Create {{ resource.label }}</h1>
         <Link :href="resource.routes.index">
-          <Button variant="outline">
+          <Button variant="default">
             Retour à la liste
           </Button>
         </Link>
@@ -118,7 +118,7 @@ function submitForm() {
             Enregistrer
           </Button>
           <Link :href="resource.routes.index">
-            <Button variant="outline">
+            <Button variant="default">
               Annuler
             </Button>
           </Link>

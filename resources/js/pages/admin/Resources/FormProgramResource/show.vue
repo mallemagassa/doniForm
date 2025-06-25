@@ -95,7 +95,7 @@ const parsedFormFields = computed(() => {
             </Button>
           </Link>
           <Link :href="resource.routes.index">
-            <Button variant="outline">
+            <Button variant="default">
               Retour
             </Button>
           </Link>

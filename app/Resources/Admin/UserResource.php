@@ -19,7 +19,7 @@ class UserResource extends Resource
     
     protected static string $model = User::class;
     protected static string $panel = 'admin';
-    protected static string $label = 'User';
+    public static string $label = 'Utilisateurs';
 
     
     public static function rolesOptions(): array

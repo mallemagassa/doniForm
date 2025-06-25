@@ -18,7 +18,7 @@ class EvaluationResource extends Resource
     
     protected static string $model = Evaluation::class;
     protected static string $panel = 'admin';
-    protected static string $label = 'Evaluation';
+    public static string $label = 'Evaluations';
 
     
     public static function applicationOptions(): array

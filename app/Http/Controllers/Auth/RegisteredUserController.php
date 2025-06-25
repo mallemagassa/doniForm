@@ -44,8 +44,10 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
 
+        $user->roles()->sync('Candidat');
+
         Auth::login($user);
 
-        return to_route('dashboard');
+        return to_route('home');
     }
 }

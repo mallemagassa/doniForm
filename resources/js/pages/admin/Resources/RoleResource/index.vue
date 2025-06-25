@@ -77,6 +77,7 @@ const formattedColumns = computed(() => {
           header: ({ column }) =>
               h(Button, {
                   variant: 'ghost',
+                  class: 'bg-[#2755a1] text-white',
                   onClick: () => column.toggleSorting(column.getIsSorted() === 'asc'),
               }, () => [label, h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
           cell: ({ row }) => {
