@@ -96,12 +96,16 @@ Route::middleware(['web', 'auth'])->prefix('admin')->group(function () {
 /*
  Page d'Accueil
 */
-Route::get('/', function(){
-     $programs = Program::all();
-        return Inertia::render('Template/Home/Index', [
-            'programs' => $programs,
-        ]);
-})->name('home');
+
+Route::middleware(['verified'])->group(function () {
+    Route::get('/', function(){
+         $programs = Program::all();
+            return Inertia::render('Template/Home/Index', [
+                'programs' => $programs,
+            ]);
+    })->name('home');
+
+});
 /*
  Page des Programmes
 */

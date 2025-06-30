@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Application extends Model
 {
     protected $fillable = [
+        'num_candidat',
         'user_id',
         'program_id',
         'status',

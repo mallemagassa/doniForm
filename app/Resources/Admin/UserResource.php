@@ -46,7 +46,7 @@ class UserResource extends Resource
         // Gate::authorize('viewAny user_resource', static::$model);
         
         $table = (new TableBuilder(static::$model))
-        ->column('name', 'Name')
+        ->column('name', 'Nom')
         ->column('email', 'Email')
         // ->column('email_verified_at', 'Email Verified At')
         // ->column('password', 'Password')

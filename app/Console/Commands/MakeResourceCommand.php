@@ -11,7 +11,7 @@ use ReflectionMethod;
 
 class MakeResourceCommand extends Command
 {
-    protected $signature = 'make:resource {name : The name of the resource} 
+    protected $signature = 'doucsoft:resource {name : The name of the resource} 
                           {--panel=admin : The panel name (admin, manager, etc.)}';
 
     protected $description = 'Create a new resource with all required files';

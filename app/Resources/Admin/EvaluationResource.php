@@ -52,9 +52,9 @@ class EvaluationResource extends Resource
     public static function index(): \Inertia\Response
     {
         $table = (new TableBuilder(static::$model))
-        ->column('user.name', 'User')
-        ->column('application.program.title', 'Application')
-        ->column('criterion.label', 'Criterion')
+        ->column('user.name', 'Utilisateur')
+        ->column('application.num_candidat', 'Application')
+        ->column('criterion.label', 'Critere')
         ->column('score', 'Score')
         // ->column('comment', 'Comment')
         ->make();
@@ -87,7 +87,7 @@ class EvaluationResource extends Resource
                         'required' => true
                     ])
         ->field('application_id', 'select', [
-                        'options' => \App\Models\Application::pluck('notes', 'id'),
+                        'options' => \App\Models\Application::pluck('num_candidat', 'id'),
                         'required' => true
                     ])
         ->field('criterion_id', 'select', [
@@ -131,7 +131,7 @@ class EvaluationResource extends Resource
                         'required' => true
                     ])
         ->field('application_id', 'select', [
-                        'options' => \App\Models\Application::pluck('name', 'id'),
+                        'options' => \App\Models\Application::pluck('num_candidat', 'id'),
                         'value' => $evaluation->application_id,
                         'required' => true
                     ])

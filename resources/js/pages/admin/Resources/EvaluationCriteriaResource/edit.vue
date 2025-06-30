@@ -8,6 +8,7 @@ import Select from '@/components/ui/select/Select.vue'
 import { SelectItem, SelectTrigger, SelectValue, SelectContent } from '@/components/ui/select'
 import { toast } from 'vue-sonner'
 import Textarea from '@/components/ui/textarea/Textarea.vue'
+import Repeater from '@/components/ui/repeater/Repeater.vue'
 
 const props = defineProps({
   evaluationCriteria: Object,
@@ -15,13 +16,24 @@ const props = defineProps({
   resource: Object,
 })
 
-// 🔁 Normalisation des dates
-function normalizeDates(evaluationCriteria, formFields) {
+// Normalisation des données
+function normalizeData(evaluationCriteria, formFields) {
   const result = { ...evaluationCriteria }
 
+  // Ajouter les items au format attendu par le repeater
+  if (evaluationCriteria.evaluation_criteria_items) {
+    result.items = evaluationCriteria.evaluation_criteria_items.map(item => ({
+      id: item.id,
+      title: item.title,
+      description: item.description
+    }))
+  } else {
+    result.items = []
+  }
+
+  // Formatage des dates si nécessaire
   for (const key in formFields) {
     const field = formFields[key]
-
     if (field.type === 'date' && result[key]) {
       const isoDate = new Date(result[key])
       result[key] = isoDate.toISOString().slice(0, 10)
@@ -31,10 +43,7 @@ function normalizeDates(evaluationCriteria, formFields) {
   return result
 }
 
-// ✅ Formulaire avec dates formatées
-const form = useForm(
-  normalizeDates(props.evaluationCriteria, props.form)
-)
+const form = useForm(normalizeData(props.evaluationCriteria, props.form))
 
 function submitForm() {
   form.put(props.resource.routes.update.replace(':id', props.evaluationCriteria.id), {
@@ -44,14 +53,9 @@ function submitForm() {
 }
 
 function getSelectValue(id) {
-  // Gestion des booléens
   if (id === 'true') return true
   if (id === 'false') return false
-  
-  // Gestion des nombres
   if (!isNaN(id)) return Number(id)
-  
-  // Valeur par défaut
   return id
 }
 </script>
@@ -95,21 +99,35 @@ function getSelectValue(id) {
               </span>
             </div>
 
-
             <div v-else-if="field.type === 'textarea'" class="space-y-2">
-            <label :for="key" class="block font-medium capitalize">
-              {{ key }}
-            </label>
-            <Textarea
-              :id="key"
-              v-model="form[key]"
-              :required="field.options?.required"
-              class=""
-            ></Textarea>
-            <span v-if="form.errors[key]" class="text-sm text-red-600">
-              {{ form.errors[key] }}
-            </span>
-          </div>
+              <label :for="key" class="block font-medium capitalize">
+                {{ key }}
+              </label>
+              <Textarea
+                :id="key"
+                v-model="form[key]"
+                :required="field.options?.required"
+              />
+              <span v-if="form.errors[key]" class="text-sm text-red-600">
+                {{ form.errors[key] }}
+              </span>
+            </div>
+
+            <div v-else-if="field.type === 'repeater'" class="space-y-2 col-span-full">
+              <label class="block font-medium capitalize">
+                {{ key }}
+              </label>
+              <Repeater 
+                v-model="form[key]"
+                :fields="field.options.fields"
+              />
+              <span v-if="form.errors[key]" class="text-sm text-red-600">
+                {{ form.errors[key] }}
+              </span>
+              <span v-if="form.errors[`${key}.*`]" class="text-sm text-red-600">
+                {{ form.errors[`${key}.*`] }}
+              </span>
+            </div>
 
             <div v-else class="space-y-2">
               <label :for="key" class="block font-medium capitalize">

@@ -11,13 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('form_fields', function (Blueprint $table) {
+        Schema::create('evaluation_criteria_items', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('form_program_id')->constrained('form_programs')->onDelete('cascade');
-            $table->string('label');
-            $table->string('field_type');
-            $table->boolean('required')->default(false);
-            $table->json('options')->nullable();
+            $table->string('title');
+            $table->string('description');
+            $table->foreignId('evaluation_criteria_id')->constrained('evaluation_criterias')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -27,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('form_fields');
+        Schema::dropIfExists('evaluation_criteria_items');
     }
 };

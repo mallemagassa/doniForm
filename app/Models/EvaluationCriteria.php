@@ -12,13 +12,8 @@ class EvaluationCriteria extends Model
         'program_id',
         'label',
         'description',
-        'max_score',
-        'weight',
     ];
     
-    protected $casts = [
-        'weight' => 'float', 
-    ];
     
     public function program(): BelongsTo
     {
@@ -28,5 +23,10 @@ class EvaluationCriteria extends Model
     public function evaluations(): HasMany
     {
         return $this->hasMany(Evaluation::class);
+    }
+
+    public function evaluationCriteriaItems(): HasMany
+    {
+        return $this->hasMany(Evaluation_criteria_items::class);
     }
 }

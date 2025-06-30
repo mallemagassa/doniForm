@@ -44,9 +44,6 @@ class EvaluationCriteriaResource extends Resource
         $table = (new TableBuilder(static::$model))
         ->column('program.title', 'Programme')
         ->column('label', 'Label')
-        // ->column('description', 'Description')
-        ->column('max_score', 'Max Score')
-        ->column('weight', 'Weight')
         ->make();
 
         return Inertia::render(static::getComponentPath('index'), [
@@ -59,6 +56,7 @@ class EvaluationCriteriaResource extends Resource
     {
         $evaluationcriteria = static::$model::with([
             'program',
+            'evaluationCriteriaItems'
         ])->findOrFail($id);
     
         return Inertia::render(static::getComponentPath('show'), [
@@ -66,19 +64,23 @@ class EvaluationCriteriaResource extends Resource
             'resource' => static::getResourceData($evaluationcriteria),
         ]);
     }
-    
+
     public static function create(): \Inertia\Response
     {
         $form = (new FormBuilder())
-        ->field('program_id', 'select', [
-                        'options' => \App\Models\Program::pluck('title', 'id'),
-                        'required' => true
-                    ])
-        ->field('label', 'text', ['required' => true])
-        ->field('description', 'textarea', ['required' => true])
-        ->field('max_score', 'text', ['required' => true])
-        ->field('weight', 'text', ['required' => true])
-        ->make();
+            ->field('program_id', 'select', [
+                'options' => Program::pluck('title', 'id'),
+                'required' => true
+            ])
+            ->field('label', 'text', ['required' => true])
+            ->field('description', 'textarea', ['required' => true])
+            ->field('items', 'repeater', [
+                'fields' => [
+                    'title' => ['type' => 'text', 'required' => true],
+                    'description' => ['type' => 'textarea', 'required' => true]
+                ]
+            ])
+            ->make();
 
         return Inertia::render(static::getComponentPath('create'), [
             'form' => $form,
@@ -92,46 +94,144 @@ class EvaluationCriteriaResource extends Resource
             'program_id' => 'required|exists:programs,id',
             'label' => 'string|required',
             'description' => 'string|required',
-            'max_score' => 'string|required',
-            'weight' => 'string|required',
-            
+            'items' => 'required|array',
+            'items.*.title' => 'required|string',
+            'items.*.description' => 'required|string',
         ]);
 
-        static::$model::create($data);
+        $evaluationCriteria = static::$model::create($data);
+        
+        // Sauvegarder les items
+        foreach ($data['items'] as $item) {
+            $evaluationCriteria->evaluationCriteriaItems()->create($item);
+        }
 
         return redirect()->route(static::getRouteName('index'));
     }
+        
+    // public static function create(): \Inertia\Response
+    // {
+    //     $form = (new FormBuilder())
+    //     ->field('program_id', 'select', [
+    //                     'options' => Program::pluck('title', 'id'),
+    //                     'required' => true
+    //                 ])
+    //     ->field('label', 'text', ['required' => true])
+    //     ->field('description', 'textarea', ['required' => true])
+    //     // ->field('max_score', 'text', ['required' => true])
+    //     // ->field('weight', 'text', ['required' => true])
+    //     ->make();
+
+    //     return Inertia::render(static::getComponentPath('create'), [
+    //         'form' => $form,
+    //         'resource' => static::getResourceData(),
+    //     ]);
+    // }
+
+    // public static function store(): \Illuminate\Http\RedirectResponse
+    // {
+    //     $data = request()->validate([
+    //         'program_id' => 'required|exists:programs,id',
+    //         'label' => 'string|required',
+    //         'description' => 'string|required',
+    //         'max_score' => 'string|required',
+    //         'weight' => 'string|required',
+            
+    //     ]);
+
+    //     static::$model::create($data);
+
+    //     return redirect()->route(static::getRouteName('index'));
+    // }
+
+    // public static function edit($id): \Inertia\Response
+    // {
+    //     $evaluationcriteria = static::$model::findOrFail($id);
+
+    //     $form = (new FormBuilder())
+    //     ->field('program_id', 'select', [
+    //                     'options' => Program::pluck('title', 'id'),
+    //                     'value' => $evaluationcriteria->program_id,
+    //                     'required' => true
+    //                 ])
+    //     ->field('label', 'text', [
+    //                     'required' => true,
+    //                     'value' => $evaluationcriteria->label
+    //                 ])
+    //     ->field('description', 'textarea', [
+    //                     'required' => true,
+    //                     'value' => $evaluationcriteria->description
+    //                 ])
+    //     // ->field('max_score', 'text', [
+    //     //                 'required' => true,
+    //     //                 'value' => $evaluationcriteria->max_score
+    //     //             ])
+    //     // ->field('weight', 'text', [
+    //     //                 'required' => true,
+    //     //                 'value' => $evaluationcriteria->weight
+    //     //             ])
+    //     ->make();
+
+    //     return Inertia::render(static::getComponentPath('edit'), [
+    //         'evaluationcriteria' => $evaluationcriteria,
+    //         'form' => $form,
+    //         'resource' => static::getResourceData($evaluationcriteria),
+    //     ]);
+    // }
+
+    // public static function update($id): \Illuminate\Http\RedirectResponse
+    // {
+    //     $evaluationcriteria = static::$model::findOrFail($id);
+    
+    //     $data = request()->validate([
+    //         'program_id' => 'required|exists:programs,id',
+    //         'label' => 'string|required',
+    //         'description' => 'string|required',
+    //         'max_score' => 'string|required',
+    //         'weight' => 'string|required',
+            
+    //     ]);
+    
+    //     $evaluationcriteria->update($data);
+    
+    //     return redirect()->route(static::getRouteName('index'));
+    // }
 
     public static function edit($id): \Inertia\Response
     {
-        $evaluationcriteria = static::$model::findOrFail($id);
+        $evaluationcriteria = static::$model::with('evaluationCriteriaItems')->findOrFail($id);
 
         $form = (new FormBuilder())
-        ->field('program_id', 'select', [
-                        'options' => \App\Models\Program::pluck('title', 'id'),
-                        'value' => $evaluationcriteria->program_id,
-                        'required' => true
-                    ])
-        ->field('label', 'text', [
-                        'required' => true,
-                        'value' => $evaluationcriteria->label
-                    ])
-        ->field('description', 'textarea', [
-                        'required' => true,
-                        'value' => $evaluationcriteria->description
-                    ])
-        ->field('max_score', 'text', [
-                        'required' => true,
-                        'value' => $evaluationcriteria->max_score
-                    ])
-        ->field('weight', 'text', [
-                        'required' => true,
-                        'value' => $evaluationcriteria->weight
-                    ])
-        ->make();
+            ->field('program_id', 'select', [
+                'options' => Program::pluck('title', 'id'),
+                'value' => $evaluationcriteria->program_id,
+                'required' => true
+            ])
+            ->field('label', 'text', [
+                'required' => true,
+                'value' => $evaluationcriteria->label
+            ])
+            ->field('description', 'textarea', [
+                'required' => true,
+                'value' => $evaluationcriteria->description
+            ])
+            ->field('items', 'repeater', [
+                'fields' => [
+                    'title' => ['type' => 'text', 'required' => true],
+                    'description' => ['type' => 'textarea', 'required' => true]
+                ],
+                'value' => $evaluationcriteria->evaluationCriteriaItems->map(function ($item) {
+                    return [
+                        'id' => $item->id, // Important pour les updates
+                        'title' => $item->title,
+                        'description' => $item->description
+                    ];
+                })->toArray()
+            ])
+            ->make();
 
         return Inertia::render(static::getComponentPath('edit'), [
-            'evaluationcriteria' => $evaluationcriteria,
+            'evaluationCriteria' => $evaluationcriteria,
             'form' => $form,
             'resource' => static::getResourceData($evaluationcriteria),
         ]);
@@ -140,18 +240,38 @@ class EvaluationCriteriaResource extends Resource
     public static function update($id): \Illuminate\Http\RedirectResponse
     {
         $evaluationcriteria = static::$model::findOrFail($id);
-    
+        
         $data = request()->validate([
             'program_id' => 'required|exists:programs,id',
             'label' => 'string|required',
             'description' => 'string|required',
-            'max_score' => 'string|required',
-            'weight' => 'string|required',
-            
+            'items' => 'required|array',
+            'items.*.title' => 'required|string',
+            'items.*.description' => 'required|string',
         ]);
-    
+        
+        // Mise à jour du critère principal
         $evaluationcriteria->update($data);
-    
+        
+        // Gestion des items
+        $existingIds = collect($data['items'])->pluck('id')->filter()->toArray();
+        
+        // Supprimer les items qui ne sont plus présents
+        $evaluationcriteria->evaluationCriteriaItems()
+            ->whereNotIn('id', $existingIds)
+            ->delete();
+        
+        // Mettre à jour ou créer les items
+        foreach ($data['items'] as $item) {
+            if (isset($item['id'])) {
+                $evaluationcriteria->evaluationCriteriaItems()
+                    ->where('id', $item['id'])
+                    ->update($item);
+            } else {
+                $evaluationcriteria->evaluationCriteriaItems()->create($item);
+            }
+        }
+        
         return redirect()->route(static::getRouteName('index'));
     }
 

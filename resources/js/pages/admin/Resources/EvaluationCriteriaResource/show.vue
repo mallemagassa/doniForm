@@ -4,6 +4,15 @@ import AppLayout from '@/layouts/AppLayout.vue'
 import Button from '@/components/ui/button/Button.vue'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card'
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 const props = defineProps({
   evaluationcriteria: Object,
@@ -17,16 +26,6 @@ function formatDate(value) {
     month: 'long',
     day: 'numeric'
   })
-}
-
-function getBadgeVariant(status) {
-  const variants = {
-    active: 'success',
-    inactive: 'destructive',
-    draft: 'warning',
-    published: 'info'
-  }
-  return variants[status] || 'default'
 }
 </script>
 
@@ -51,14 +50,16 @@ function getBadgeVariant(status) {
         <CardHeader>
           <CardTitle class="flex items-center gap-4">
             <span>Critère #{{ evaluationcriteria.id }}</span>
-            <!-- <Badge :variant="getBadgeVariant(evaluationcriteria.status)">
-              {{ evaluationcriteria.status }}
-            </Badge> -->
           </CardTitle>
         </CardHeader>
 
         <CardContent class="grid gap-4 md:grid-cols-2">
           <!-- Informations principales -->
+          <div class="space-y-1">
+            <h3 class="text-sm font-medium text-gray-500">Programme</h3>
+            <p class="text-sm">{{ evaluationcriteria.program?.title || 'Non renseigné' }}</p>
+          </div>
+
           <div class="space-y-1">
             <h3 class="text-sm font-medium text-gray-500">Label</h3>
             <p class="text-sm">{{ evaluationcriteria.label || 'Non renseigné' }}</p>
@@ -69,12 +70,6 @@ function getBadgeVariant(status) {
             <p class="text-sm whitespace-pre-line">{{ evaluationcriteria.description || 'Non renseigné' }}</p>
           </div>
 
-          <div class="space-y-1">
-            <h3 class="text-sm font-medium text-gray-500">Poids</h3>
-            <p class="text-sm">{{ evaluationcriteria.weight || 'Non renseigné' }}</p>
-          </div>
-
-
           <!-- Métadonnées -->
           <div class="space-y-1">
             <h3 class="text-sm font-medium text-gray-500">Date de création</h3>
@@ -84,6 +79,30 @@ function getBadgeVariant(status) {
           <div class="space-y-1">
             <h3 class="text-sm font-medium text-gray-500">Dernière modification</h3>
             <p class="text-sm">{{ formatDate(evaluationcriteria.updated_at) }}</p>
+          </div>
+        </CardContent>
+
+        <!-- Section pour les items du repeater -->
+        <CardContent class="border-t pt-4">
+          <h3 class="text-lg font-semibold mb-4">Éléments d'évaluation</h3>
+          
+          <Table v-if="evaluationcriteria.evaluation_criteria_items?.length">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Titre</TableHead>
+                <TableHead>Description</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow v-for="item in evaluationcriteria.evaluation_criteria_items" :key="item.id">
+                <TableCell class="font-medium">{{ item.title }}</TableCell>
+                <TableCell class="whitespace-pre-line">{{ item.description }}</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+
+          <div v-else class="text-center py-4 text-gray-500">
+            Aucun élément d'évaluation défini
           </div>
         </CardContent>
 

@@ -12,9 +12,9 @@ const props = defineProps({
 // Initialisation dynamique du formulaire avec valeurs par défaut
 const form = useForm(
   props.fields.reduce((acc, field) => {
-    acc[field.name] = field.default_value || 
-                     (field.type === 'file' ? null : 
-                     (field.type === 'checkbox' ? false : ''));
+    acc[field.id] = field.default_value || 
+                     (field.field_type === 'file' ? null : 
+                     (field.field_type === 'checkbox' ? false : ''));
     return acc;
   }, {})
 );
@@ -22,24 +22,45 @@ const form = useForm(
 // Soumission du formulaire
 const submit = () => {
   const method = props.formConfig?.method || 'post';
-  const url = props.formConfig?.action || route("applications.store", props.program.id);
+  const url = props.formConfig?.action || route("apply.submit", props.program.id);
 
   form.transform(data => {
     const formData = new FormData();
-    Object.entries(data).forEach(([key, value]) => {
+    props.fields.forEach(field => {
+      const value = data[field.id];
       if (value !== null && value !== undefined) {
-        formData.append(key, value);
+        if (field.field_type === 'file' && value) {
+          if (field.multiple && Array.isArray(value)) {
+            value.forEach(file => formData.append(`${field.id}[]`, file));
+          } else {
+            formData.append(field.id, value);
+          }
+        } else {
+          formData.append(field.id, value);
+        }
       }
     });
     return formData;
   })[method](url, {
     forceFormData: true,
+    preserveScroll: true,
     onSuccess: () => {
       form.reset();
-      // Gérer la redirection ou notification ici
+      // Redirection ou notification de succès
     },
     onError: (errors) => {
-      console.error("Validation errors:", errors);
+      // Transformation des erreurs pour les champs dynamiques
+      const transformedErrors = {};
+      Object.entries(errors).forEach(([key, value]) => {
+        // Si l'erreur concerne un champ de fichier multiple
+        if (key.includes('.*')) {
+          const baseKey = key.replace('.*', '');
+          transformedErrors[baseKey] = value;
+        } else {
+          transformedErrors[key] = value;
+        }
+      });
+      form.setErrors(transformedErrors);
     }
   });
 };
@@ -64,6 +85,8 @@ const fieldComponents = {
   toggle: 'toggle',
   range: 'range'
 };
+
+console.log(props.fields)
 </script>
 
 <template>
@@ -87,7 +110,7 @@ const fieldComponents = {
               <form @submit.prevent="submit" enctype="multipart/form-data">
                 <div class="mb-4" v-for="(field, index) in fields" :key="index">
                   <!-- Label du champ -->
-                  <label :for="field.name" class="form-label fw-semibold">
+                  <label :for="`${field.id}`" class="form-label fw-semibold">
                     {{ field.label }}
                     <span v-if="field.required" class="text-danger">*</span>
                     <small class="text-muted ms-2" v-if="field.help_text">
@@ -97,11 +120,11 @@ const fieldComponents = {
 
                   <!-- Champ Texte/Email/Number/Date etc. -->
                   <input
-                    v-if="['text', 'email', 'number', 'password', 'tel', 'url', 'date', 'datetime-local', 'time'].includes(field.type)"
-                    :type="field.type"
+                    v-if="['text', 'email', 'number', 'password', 'tel', 'url', 'date', 'datetime-local', 'time'].includes(field.field_type)"
+                    :type="field.field_type"
                     class="form-control"
-                    :id="field.name"
-                    v-model="form[field.name]"
+                    :id="`${field.id}`"
+                    v-model="form[`${field.id}`]"
                     :required="field.required"
                     :placeholder="field.placeholder || ''"
                     :min="field.min"
@@ -112,10 +135,10 @@ const fieldComponents = {
 
                   <!-- Textarea -->
                   <textarea
-                    v-else-if="field.type === 'textarea'"
+                    v-else-if="field.field_type === 'textarea'"
                     class="form-control"
-                    :id="field.name"
-                    v-model="form[field.name]"
+                    :id="`${field.id}`"
+                    v-model="form[`${field.id}`]"
                     :required="field.required"
                     :rows="field.rows || 4"
                     :placeholder="field.placeholder || ''"
@@ -123,10 +146,10 @@ const fieldComponents = {
 
                   <!-- Select -->
                   <select
-                    v-else-if="field.type === 'select'"
+                    v-else-if="field.field_type === 'select'"
                     class="form-select"
-                    :id="field.name"
-                    v-model="form[field.name]"
+                    :id="`${field.id}`"
+                    v-model="form[`${field.id}`]"
                     :required="field.required"
                     :multiple="field.multiple || false"
                   >
@@ -143,21 +166,21 @@ const fieldComponents = {
                   </select>
 
                   <!-- Checkbox -->
-                  <div v-else-if="field.type === 'checkbox'" class="form-check">
+                  <div v-else-if="field.field_type === 'checkbox'" class="form-check">
                     <input
                       class="form-check-input"
                       type="checkbox"
-                      :id="field.name"
-                      v-model="form[field.name]"
+                      :id="`${field.id}`"
+                      v-model="form[`${field.id}`]"
                       :required="field.required"
                     />
-                    <label class="form-check-label" :for="field.name">
+                    <label class="form-check-label" :for="`${field.id}`">
                       {{ field.checkbox_label || field.label }}
                     </label>
                   </div>
 
                   <!-- Radio Buttons -->
-                  <div v-else-if="field.type === 'radio'" class="radio-group">
+                  <div v-else-if="field.field_type === 'radio'" class="radio-group">
                     <div 
                       v-for="(option, optIndex) in field.options" 
                       :key="optIndex" 
@@ -166,14 +189,14 @@ const fieldComponents = {
                       <input
                         class="form-check-input"
                         type="radio"
-                        :id="`${field.name}-${optIndex}`"
-                        v-model="form[field.name]"
+                        :id="`${`${field.id}`}-${optIndex}`"
+                        v-model="form[`${field.id}`]"
                         :value="option.value || option"
                         :required="field.required && optIndex === 0"
                       />
                       <label 
                         class="form-check-label" 
-                        :for="`${field.name}-${optIndex}`"
+                        :for="`${`${field.id}`}-${optIndex}`"
                       >
                         {{ option.label || option }}
                       </label>
@@ -181,12 +204,12 @@ const fieldComponents = {
                   </div>
 
                   <!-- Fichier -->
-                  <div v-else-if="field.type === 'file'">
+                  <div v-else-if="field.field_type === 'file'">
                     <input
                       type="file"
                       class="form-control"
-                      :id="field.name"
-                      @change="form[field.name] = $event.target.files[0]"
+                      :id="`${field.id}`"
+                      @change="form[`${field.id}`] = $event.target.files[0]"
                       :required="field.required"
                       :accept="field.accept || '*'"
                       :multiple="field.multiple || false"
@@ -198,11 +221,11 @@ const fieldComponents = {
 
                   <!-- Affichage des erreurs -->
                   <div 
-                    v-if="form.errors[field.name]" 
+                    v-if="form.errors[field.id]" 
                     class="invalid-feedback d-block"
                   >
                     <i class="bi bi-exclamation-circle me-1"></i>
-                    {{ form.errors[field.name] }}
+                    {{ form.errors[field.id] }}
                   </div>
                 </div>
 

@@ -7,6 +7,7 @@ use Inertia\Inertia;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use App\Http\Middleware\EnsurePanelAccess;
 
 
 class PanelServiceProvider extends ServiceProvider
@@ -40,7 +41,7 @@ class PanelServiceProvider extends ServiceProvider
     protected function registerPanelRoutes(string $panel, array $config): void
     {
         Route::prefix($config['path'])
-            ->middleware($config['middleware'])
+            ->middleware(array_merge($config['middleware'], [EnsurePanelAccess::class], ['verified']))
             ->name("{$panel}.")
             ->group(function () use ($panel, $config) {
                 Route::get('/', fn () => Inertia::render("{$panel}/Dashboard"))->name('dashboard');
@@ -55,7 +56,6 @@ class PanelServiceProvider extends ServiceProvider
     {
         $baseName = Str::kebab(class_basename($resource));
         $permissionName = Str::snake(class_basename($resource));
-        // dd('can:viewAny '.$permissionName);
         Route::prefix($baseName)
             ->name("{$baseName}.")
             ->middleware(['can:viewAny '.$permissionName])

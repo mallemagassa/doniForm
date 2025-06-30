@@ -44,7 +44,7 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
 
-        $user->roles()->sync('Candidat');
+        $user->assignRole('candidat');
 
         Auth::login($user);
 

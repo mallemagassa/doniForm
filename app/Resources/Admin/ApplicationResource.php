@@ -20,7 +20,7 @@ class ApplicationResource extends Resource
     
     protected static string $model = Application::class;
     protected static string $panel = 'admin';
-    protected static string $label = 'Applications';
+    public static string $label = 'Candidats';
 
     
     public static function programOptions(): array
@@ -63,12 +63,13 @@ class ApplicationResource extends Resource
     public static function index(): \Inertia\Response
     {
         $table = (new TableBuilder(static::$model))
-        ->column('user.name', 'User')
-        ->column('program.title', 'Program')
-        ->column('submitted_at', 'Submitted At')
+        ->column('num_candidat', 'N° candidat')
+        ->column('user.name', 'Nom candidat')
+        ->column('program.title', 'Programme')
+        ->column('submitted_at', 'Date soumission')
         ->column('status', 'Status')
         // ->column('notes', 'Notes')
-        ->column('form_data', 'Form Data')
+        // ->column('form_data', 'Form Data')
         ->make();
 
         return Inertia::render(static::getComponentPath('index'), [
@@ -192,18 +193,19 @@ class ApplicationResource extends Resource
         $application = static::$model::findOrFail($id);
     
         $data = request()->validate([
-            'user_id' => 'required|exists:users,id',
-            'program_id' => 'required|exists:programs,id',
-            'submitted_at' => 'string|required',
+            // 'user_id' => 'required|exists:users,id',
+            // 'program_id' => 'required|exists:programs,id',
+            // 'submitted_at' => 'string|required',
             'status' => 'string|required',
-            'notes' => 'string|required',
-            'form_data' => 'string|required',
+            // 'notes' => 'string|required',
+            // 'form_data' => 'string|required',
             
         ]);
     
         $application->update($data);
     
-        return redirect()->route(static::getRouteName('index'));
+        return redirect()->route(static::getRouteName('show'), $id);
+
     }
 
     public static function destroy($id): \Illuminate\Http\RedirectResponse

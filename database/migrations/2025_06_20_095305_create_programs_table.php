@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('programs', function (Blueprint $table) {
             $table->id();
             $table->string('title');
+            $table->string('sigle');
             $table->text('description')->nullable();
             $table->foreignId('region_id')->constrained('regions')->onDelete('cascade');
             $table->date('start_date')->nullable();

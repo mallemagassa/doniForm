@@ -9,7 +9,7 @@ import Select from '@/components/ui/select/Select.vue'
 import SelectItem from '@/components/ui/select/SelectItem.vue'
 import { SelectTrigger, SelectValue, SelectContent } from '@/components/ui/select'
 import Textarea from '@/components/ui/textarea/Textarea.vue'
-
+import Repeater from '@/components/ui/repeater/Repeater.vue'
 
 const props = defineProps({
   form: Object,
@@ -17,14 +17,15 @@ const props = defineProps({
 })
 
 // Initialiser les valeurs du formulaire
-const form = useForm(
-  Object.fromEntries(
+const form = useForm({
+  ...Object.fromEntries(
     Object.keys(props.form).map(key => [
       key,
-      props.form[key].type === 'checkbox' ? false : ''
+      props.form[key].type === 'checkbox' ? false : 
+      props.form[key].type === 'repeater' ? [] : ''
     ])
   )
-)
+})
 
 function submitForm() {
   form.post(props.resource.routes.store, {
@@ -94,6 +95,22 @@ function submitForm() {
               </span>
             </div>
 
+            <div v-else-if="field.type === 'repeater'" class="space-y-2 col-span-full">
+              <label class="block font-medium capitalize">
+                {{ key }}
+              </label>
+              <Repeater 
+                v-model="form[key]"
+                :fields="field.options.fields"
+              />
+              <span v-if="form.errors[key]" class="text-sm text-red-600">
+                {{ form.errors[key] }}
+              </span>
+              <span v-if="form.errors[`${key}.*`]" class="text-sm text-red-600">
+                {{ form.errors[`${key}.*`] }}
+              </span>
+            </div>
+
             <div v-else class="space-y-2">
               <label :for="key" class="block font-medium capitalize">
                 {{ key }}
@@ -110,8 +127,6 @@ function submitForm() {
             </div>
           </template>
         </div>
-
-
 
         <div class="flex gap-2">
           <Button type="submit" :disabled="form.processing">

@@ -72,13 +72,14 @@ class ProgramResource extends Resource
     public static function index(): \Inertia\Response
     {
         $table = (new TableBuilder(static::$model))
-        ->column('title', 'Title')
+        ->column('title', 'Titre')
+        ->column('sigle', 'Sigle')
         // ->column('description', 'Description')
         ->column('region.name', 'Region')
-        ->column('start_date', 'Start Date')
-        ->column('end_date', 'End Date')
+        ->column('start_date', 'Date Debut')
+        ->column('end_date', 'Date Fin')
         ->column('status', 'Status')
-        ->column('user.name', 'User')
+        ->column('user.name', 'Utilisateur')
         ->make();
 
         
@@ -107,6 +108,7 @@ class ProgramResource extends Resource
     {
         $form = (new FormBuilder())
         ->field('title', 'text', ['required' => true])
+        ->field('sigle', 'text', ['required' => true])
         ->field('description', 'textarea', ['required' => true])
         ->field('region_id', 'select', [
                         'options' => Region::pluck('name', 'id'),
@@ -139,6 +141,7 @@ class ProgramResource extends Resource
     {
         $data = request()->validate([
             'title' => 'string|required',
+            'sigle' => 'string|required',
             'description' => 'string|required',
             'region_id' => 'required|exists:regions,id',
             'start_date' => 'required|date',
@@ -162,12 +165,16 @@ class ProgramResource extends Resource
                         'required' => true,
                         'value' => $program->title
                     ])
+        ->field('sigle', 'text', [
+                        'required' => true,
+                        'value' => $program->sigle
+                    ])
         ->field('description', 'textarea', [
                         'required' => true,
                         'value' => $program->description
                     ])
         ->field('region_id', 'select', [
-                        'options' => \App\Models\Region::pluck('name', 'id'),
+                        'options' => Region::pluck('name', 'id'),
                         'value' => $program->region_id,
                         'required' => true
                     ])
@@ -210,6 +217,7 @@ class ProgramResource extends Resource
     
         $data = request()->validate([
             'title' => 'string|required',
+            'sigle' => 'string|required',
             'description' => 'string|required',
             'region_id' => 'required|exists:regions,id',
             'start_date' => 'date|required',

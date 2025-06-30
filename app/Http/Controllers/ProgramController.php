@@ -38,13 +38,18 @@ class ProgramController extends Controller
     public function apply(Program $program)
     {
         // Simule des champs dynamiques associés au programme
-        $fields = [
-            ['label' => 'Nom complet', 'type' => 'text', 'required' => true],
-            ['label' => 'Email', 'type' => 'email', 'required' => true],
-            ['label' => 'Secteur d\'activité', 'type' => 'select', 'required' => true, 'options' => ['Agritech', 'EdTech', 'Fintech']],
-            ['label' => 'Lettre de motivation', 'type' => 'textarea', 'required' => true],
-            ['label' => 'Business Plan (PDF)', 'type' => 'file', 'required' => true],
-        ];
+        // $fields = [
+        //     ['label' => 'Nom complet', 'type' => 'text', 'required' => true],
+        //     ['label' => 'Email', 'type' => 'email', 'required' => true],
+        //     ['label' => 'Secteur d\'activité', 'type' => 'select', 'required' => true, 'options' => ['Agritech', 'EdTech', 'Fintech']],
+        //     ['label' => 'Lettre de motivation', 'type' => 'textarea', 'required' => true],
+        //     ['label' => 'Business Plan (PDF)', 'type' => 'file', 'required' => true],
+        // ];
+
+        $fields = $program->formProgram->formFields;
+
+        // dd($program->formPrograms);
+
 
         return Inertia::render('Template/Programs/Apply', [
             'program' => $program,
@@ -57,17 +62,193 @@ class ProgramController extends Controller
      */
     public function submit(Request $request, Program $program)
     {
-        // Exemple de validation générique
-        $validated = $request->validate([
-            'Nom complet' => 'required|string|max:255',
-            'Email' => 'required|email',
-            'Secteur d\'activité' => 'required|string',
-            'Lettre de motivation' => 'required|string',
-            'Business Plan (PDF)' => 'required|file|mimes:pdf|max:2048',
+        $fields = $program->formProgram->formFields;
+        
+        // dd($request);
+        // Préparation des règles de validation
+        $validationRules = [];
+        $customMessages = [];
+        $customAttributes = [];
+
+        foreach ($fields as $field) {
+            $fieldName = $field->id;
+            $rules = [];
+            
+            // Règle required
+            if ($field->required) {
+                $rules[] = 'required';
+                $customMessages["$fieldName.required"] = "Le champ {$field->label} est obligatoire.";
+            } else {
+                $rules[] = 'nullable';
+            }
+
+            // Règles spécifiques par type de champ
+            switch ($field->field_type) {
+                case 'email':
+                    $rules[] = 'email';
+                    $customMessages += [
+                        "$fieldName.email" => "Veuillez entrer une adresse email valide.",
+                        "$fieldName.max" => "L'email ne doit pas dépasser 255 caractères."
+                    ];
+                    break;
+
+                case 'number':
+                    $rules[] = 'numeric';
+                    $customMessages["$fieldName.numeric"] = "Veuillez entrer un nombre valide.";
+                    
+                    if (isset($field->min)) {
+                        $rules[] = 'min:'.$field->min;
+                        $customMessages["$fieldName.min"] = "La valeur minimale est {$field->min}.";
+                    }
+                    if (isset($field->max)) {
+                        $rules[] = 'max:'.$field->max;
+                        $customMessages["$fieldName.max"] = "La valeur maximale est {$field->max}.";
+                    }
+                    break;
+
+                case 'file':
+                    $rules[] = 'file';
+                    $customMessages["$fieldName.file"] = "Veuillez uploader un fichier valide.";
+                    
+                    if (isset($field->accept)) {
+                        $mimes = implode(',', array_map(function($ext) {
+                            return str_replace(['.', ' '], '', $ext);
+                        }, explode(',', $field->accept)));
+                        $rules[] = 'mimes:'.$mimes;
+                        $customMessages["$fieldName.mimes"] = "Types de fichiers acceptés: {$field->accept}.";
+                    }
+                    
+                    if (isset($field->max_size)) {
+                        $maxSize = $field->max_size * 1024; // Conversion en Ko
+                        $rules[] = 'max:'.$maxSize;
+                        $customMessages["$fieldName.max"] = "La taille maximale est {$field->max_size} Ko.";
+                    }
+                    break;
+
+                case 'date':
+                    $rules[] = 'date';
+                    $customMessages["$fieldName.date"] = "Format de date invalide (AAAA-MM-JJ).";
+                    break;
+
+                case 'textarea':
+                    $rules[] = 'string';
+                    if (isset($field->max_length)) {
+                        $rules[] = 'max:'.$field->max_length;
+                        $customMessages["$fieldName.max"] = "Maximum {$field->max_length} caractères autorisés.";
+                    }
+                    break;
+
+                case 'select':
+                    if (isset($field->options)) {
+                        $options = is_array($field->options) ? $field->options : json_decode($field->options, true);
+                        $allowedValues = array_column($options, 'value') ?? $options;
+                        $rules[] = 'in:'.implode(',', $allowedValues);
+                        $customMessages["$fieldName.in"] = "Veuillez sélectionner une option valide.";
+                    }
+                    break;
+
+                case 'checkbox':
+                    $rules[] = 'boolean';
+                    $customMessages["$fieldName.boolean"] = "Valeur invalide pour la case à cocher.";
+                    break;
+
+                case 'radio':
+                    if (isset($field->options)) {
+                        $options = is_array($field->options) ? $field->options : json_decode($field->options, true);
+                        // dd($options);
+                        $allowedValues =  $options;
+                        $rules[] = 'in:'.implode(',', $allowedValues);
+                        $customMessages["$fieldName.in"] = "Veuillez sélectionner une option valide.";
+                    }
+                    break;
+
+                default: // text, tel, url, etc.
+                    $rules[] = 'string';
+                    if (isset($field->pattern)) {
+                        $rules[] = 'regex:'.$field->pattern;
+                        $customMessages["$fieldName.regex"] = "Le format saisi est invalide.";
+                    }
+                    break;
+            }
+
+            $validationRules[$fieldName] = $rules;
+            $customAttributes[$fieldName] = $field->label;
+        }
+
+        // Validation des données
+        $validatedData = $request->validate($validationRules, $customMessages, $customAttributes);
+
+        // Préparation des données pour le JSON
+        $formData = [];
+
+        foreach ($fields as $field) {
+            $fieldName = $field->id;
+            $value = $validatedData[$fieldName] ?? null;
+
+            if ($field->field_type === 'file' && $request->hasFile($fieldName)) {
+                $file = $request->file($fieldName);
+                $path = $file->store(
+                    "documents/{$program->id}/{$fieldName}",
+                    'public'
+                );
+
+                $formData[$fieldName] = [
+                    'path' => $path,
+                    'original_name' => $file->getClientOriginalName(),
+                    'mime_type' => $file->getClientMimeType(),
+                    'size' => $file->getSize(),
+                    'uploaded_at' => now()->toDateTimeString()
+                ];
+            } else {
+                // Pour les autres types de champs
+                $formData[$fieldName] = [
+                    'value' => $value,
+                    'type' => $field->field_type,
+                    'label' => $field->label
+                ];
+
+                // Ajout des options pour les selects/radios
+                if (in_array($field->field_type, ['select', 'radio'])) {
+                    $formData[$fieldName]['options'] = is_array($field->options) 
+                        ? $field->options 
+                        : json_decode($field->options, true);
+                }
+            }
+        }
+
+        // dd($program->sigle.now(). );
+        // Enregistrement de la candidature
+
+        $date = now()->format('d-m-Y'); // exemple : 06-06-2025
+
+        $lastApplication = $program->applications()
+            ->whereDate('submitted_at', now()->startOfDay())
+            ->latest('id') // ou 'submitted_at'
+            ->first();
+
+        $lastNumber = 0;
+
+        if ($lastApplication) {
+            if (preg_match('/-(\d+)$/', $lastApplication->num_candidat, $matches)) {
+                $lastNumber = (int) $matches[1];
+            }
+        }
+
+        $newNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT); // '0002'
+
+        $numCandidat = $program->sigle . '-' . $date . '-' . $newNumber;
+
+        $application = $program->applications()->create([
+            'num_candidat' =>  $numCandidat,
+            'user_id' => auth()->id(),
+            'program_id' => $program->id,
+            'form_data' => $formData, // Conversion automatique en JSON via le cast
+            'submitted_at' => now(),
+            'status' => 'pending',
         ]);
 
-
-        return redirect()->route('template.program.show', $program->id)
-            ->with('success', 'Votre candidature a bien été soumise.');
+        return redirect()
+            ->route('program.show', $program->id)
+            ->with('success', 'Votre candidature a été soumise avec succès!');
     }
 }

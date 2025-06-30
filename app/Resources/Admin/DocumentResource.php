@@ -35,8 +35,8 @@ class DocumentResource extends Resource
         $table = (new TableBuilder(static::$model))
         ->column('application.program.title', 'Application')
         ->column('label', 'Label')
-        ->column('file_path', 'File Path')
-        ->column('uploaded_at', 'Uploaded At')
+        ->column('file_path', 'Fichier')
+        // ->column('uploaded_at', 'Date Telechargement')
         ->make();
 
         return Inertia::render(static::getComponentPath('index'), [
@@ -99,7 +99,7 @@ class DocumentResource extends Resource
         $form = (new FormBuilder())
             ->field('application_id', 'select', [
                 'options' => Application::pluck('status', 'id'),
-                'value' => $document->application_id,
+                'value' => $document->num_candidat,
                 'required' => true
             ])
             ->field('label', 'text', [

@@ -32,9 +32,9 @@ class RegionResource extends Resource
     public static function index(): \Inertia\Response
     {
         $table = (new TableBuilder(static::$model))
-        ->column('name', 'Name')
-        ->column('description', 'Description')
-        ->column('country', 'Country')
+        ->column('name', 'Nom')
+        // ->column('description', 'Description')
+        ->column('country', 'Pays')
         ->column('status', 'Status')
         ->make();
 

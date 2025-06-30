@@ -16,8 +16,8 @@ return new class extends Migration
             $table->foreignId('program_id')->constrained('programs')->onDelete('cascade');
             $table->string('label');
             $table->text('description')->nullable();
-            $table->unsignedInteger('max_score')->default(10);
-            $table->decimal('weight', 5, 2)->default(1.0); // Poids du critère dans l’évaluation globale
+            // $table->unsignedInteger('max_score')->default(10);
+            // $table->decimal('weight', 5, 2)->default(1.0); // Poids du critère dans l’évaluation globale
             $table->timestamps();
         });
     }

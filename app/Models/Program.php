@@ -5,11 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Program extends Model
 {
     protected $fillable = [
         'title',
+        'sigle',
         'description',
         'region_id',
         'start_date',
@@ -34,9 +36,9 @@ class Program extends Model
     }
 
 
-    public function formFields(): HasMany
+    public function formProgram(): HasOne
     {
-        return $this->hasMany(FormField::class);
+        return $this->hasOne(FormProgram::class);
     }
 
     public function region(): BelongsTo
