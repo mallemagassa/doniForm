@@ -54,6 +54,8 @@ interface User {
   email: string
 }
 
+const emits = defineEmits(['row-click'])
+
 const props = defineProps({
   data: {
     type: Array as PropType<User[]>,
@@ -146,7 +148,11 @@ const table = useVueTable({
         <TableBody>
           <template v-if="table.getRowModel().rows?.length">
             <template v-for="row in table.getRowModel().rows" :key="row.id">
-              <TableRow :data-state="row.getIsSelected() && 'selected'">
+              <TableRow
+                :data-state="row.getIsSelected() && 'selected'"
+                class="cursor-pointer hover:bg-muted/30 transition"
+                @click="$emit('row-click', row.original)"
+              >
                 <TableCell v-for="cell in row.getVisibleCells()" :key="cell.id">
                   <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
                 </TableCell>

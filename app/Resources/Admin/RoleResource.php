@@ -19,6 +19,8 @@ class RoleResource extends Resource
     protected static string $panel = 'admin';
     public static string $label = 'Rôles';
 
+    // public static string $group = 'Utilisateurs';
+    public static string $group = 'Parametre';
     public static function index(): Response
     {
         $table = (new TableBuilder(static::$model))

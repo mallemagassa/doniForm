@@ -11,12 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('evaluation_criteria_items', function (Blueprint $table) {
+        Schema::create('grille_labels', function (Blueprint $table) {
             $table->id();
-            $table->string('title');
-            $table->string('description');
-            $table->boolean('is_checked')->default(false);
-            $table->foreignId('evaluation_criteria_id')->constrained('evaluation_criterias')->onDelete('cascade');
+            $table->string('nom');
+            $table->foreignId('program_id')->constrained('programs')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -26,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('evaluation_criteria_items');
+        Schema::dropIfExists('grille_labels');
     }
 };

@@ -18,6 +18,9 @@ class RegionResource extends Resource
     protected static string $panel = 'admin';
     public static string $label = 'Regions';
 
+    // public static string $group = 'Utilisateurs';
+
+    public static string $group = 'Parametre';
     
     public static function programsOptions(): array
     {

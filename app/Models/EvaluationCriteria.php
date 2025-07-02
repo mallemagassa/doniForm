@@ -27,6 +27,6 @@ class EvaluationCriteria extends Model
 
     public function evaluationCriteriaItems(): HasMany
     {
-        return $this->hasMany(Evaluation_criteria_items::class);
+        return $this->hasMany(EvaluationCriteriaItem::class);
     }
 }

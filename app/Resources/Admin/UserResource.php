@@ -21,6 +21,8 @@ class UserResource extends Resource
     protected static string $panel = 'admin';
     public static string $label = 'Utilisateurs';
 
+    // public static string $group = 'Utilisateurs';
+
     
     public static function rolesOptions(): array
     {

@@ -4,7 +4,7 @@ import { Link, router, Head } from '@inertiajs/vue3';
 import { route } from 'ziggy-js';
 
 const props = defineProps({
-  programs: Array
+  programs: Object, // Doit être un objet pagination, non un Array
 });
 
 const showProgram = (id) => {

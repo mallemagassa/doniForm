@@ -19,7 +19,7 @@ class ResourcePolicy
 
     public function before($user, $ability)
     {
-        if ($user->hasRole('super-admin')) {
+        if ($user->hasRole('admin')) {
             return true;
         }
     }

@@ -11,12 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('evaluation_criteria_items', function (Blueprint $table) {
+        Schema::create('grille_items', function (Blueprint $table) {
             $table->id();
-            $table->string('title');
-            $table->string('description');
-            $table->boolean('is_checked')->default(false);
-            $table->foreignId('evaluation_criteria_id')->constrained('evaluation_criterias')->onDelete('cascade');
+            $table->string('titre');
+            $table->integer('note_1');
+            $table->integer('note_2');
+            $table->integer('note_3');
+            $table->foreignId('grille_label_id')->constrained('grille_labels')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -26,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('evaluation_criteria_items');
+        Schema::dropIfExists('grille_items');
     }
 };

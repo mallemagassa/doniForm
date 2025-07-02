@@ -1,11 +1,12 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
-use App\Http\Controllers\ProgramController;
 use App\Models\Program;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\ProgramController;
+use App\Resources\Admin\ApplicationResource;
 
 // // Accueil
 // Route::get('/', function () {
@@ -14,6 +15,7 @@ use App\Models\Program;
 
 
 // Routes FilePond avec préfixe 'admin/filepond' et middleware 'auth'
+Route::put('/evaluation-items/{id}/toggle', [ApplicationResource::class, 'toggle'])->name('evaluation-items.toggle');
 Route::middleware(['web', 'auth'])->prefix('admin')->group(function () {
 
     Route::prefix('filepond')->name('filepond.')->group(function () {
@@ -99,7 +101,7 @@ Route::middleware(['web', 'auth'])->prefix('admin')->group(function () {
 
 Route::middleware(['verified'])->group(function () {
     Route::get('/', function(){
-         $programs = Program::all();
+        $programs = Program::latest()->take(6)->get();
             return Inertia::render('Template/Home/Index', [
                 'programs' => $programs,
             ]);
@@ -111,11 +113,11 @@ Route::middleware(['verified'])->group(function () {
 */
 
 
+
 Route::get('/programs', [ProgramController::class, 'index'])->name('program.index');
 Route::get('/programs/{program}', [ProgramController::class, 'show'])->name('program.show');
 Route::get('/programs/{program}/apply', [ProgramController::class, 'apply'])->name('apply');
 Route::post('/programs/{program}/apply', [ProgramController::class, 'submit'])->name('apply.submit');
-
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

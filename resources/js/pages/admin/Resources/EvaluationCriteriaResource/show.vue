@@ -89,13 +89,13 @@ function formatDate(value) {
           <Table v-if="evaluationcriteria.evaluation_criteria_items?.length">
             <TableHeader>
               <TableRow>
-                <TableHead>Titre</TableHead>
-                <TableHead>Description</TableHead>
+                <TableHead class="font-bold">Titre</TableHead>
+                <TableHead class="font-bold">Description</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               <TableRow v-for="item in evaluationcriteria.evaluation_criteria_items" :key="item.id">
-                <TableCell class="font-medium">{{ item.title }}</TableCell>
+                <TableCell class="font-medium font-bold">{{ item.title }}</TableCell>
                 <TableCell class="whitespace-pre-line">{{ item.description }}</TableCell>
               </TableRow>
             </TableBody>

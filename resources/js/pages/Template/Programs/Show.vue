@@ -4,7 +4,8 @@ import { Link, router, Head } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 
 const props = defineProps({
-  program: Object
+  program: Object,
+  critere: Object,
 });
 
 const formatDate = (dateString) => {
@@ -39,6 +40,9 @@ const formatDate = (dateString) => {
           <div class="col-lg-4">
             <div class="border-0 shadow-sm program-sidebar card">
               <div class="p-4 card-body">
+
+<!-- Details du programme -->
+
                 <h2 class="mb-4 h4 card-title">Détails du programme</h2>
                 
                 <ul class="list-group list-group-flush">
@@ -55,6 +59,7 @@ const formatDate = (dateString) => {
                     <span class="badge bg-success">{{ program.status }}</span>
                   </li>
                 </ul>
+
 
                 <Link 
                   :href="route('apply', program.id)" 

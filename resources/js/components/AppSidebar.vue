@@ -18,18 +18,46 @@ const resources = computed(() => props.resources ?? [])
 
 // console.log('Panel:', resources.value)
 
-const mainNavItems = computed<NavItem[]>(() => [
-  {
-    title: 'Tableau de Board',
-    href: `/${panel.value}`,
-    icon: LayoutGrid,
-  },
-  ...resources.value.map((resource: { label: string; routeName: string }) => ({
-    title: resource.label,
-    href: `/${panel.value}/${resource.routeName}`,
-    icon: Folder, // ou un mapping si tu veux une icône différente par ressource
-  })),
-])
+// const mainNavItems = computed<NavItem[]>(() => [
+//   {
+//     title: 'Tableau de Board',
+//     href: `/${panel.value}`,
+//     icon: LayoutGrid,
+//   },
+//   ...resources.value.map((resource: { label: string; routeName: string }) => ({
+//     title: resource.label,
+//     href: `/${panel.value}/${resource.routeName}`,
+//     icon: Folder, // ou un mapping si tu veux une icône différente par ressource
+//   })),
+// ])
+
+const mainNavItems = computed<NavItem[]>(() => {
+  const items = []
+
+  for (const [group, resources] of Object.entries(props.resources ?? {})) {
+    if (Array.isArray(resources)) {
+      items.push({
+        title: group,
+        icon: Folder,
+        children: resources.map((r: any) => ({
+          title: r.label,
+          href: `/${panel.value}/${r.routeName}`,
+          icon: Folder,
+        }))
+      })
+    } else {
+      // fallback for non-grouped
+      items.push({
+        title: resources.label,
+        href: `/${panel.value}/${resources.routeName}`,
+        icon: Folder,
+      })
+    }
+  }
+
+  return items
+})
+
 
 const footerNavItems: NavItem[] = [
     // {

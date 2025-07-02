@@ -5,24 +5,20 @@ import Button from '@/components/ui/button/Button.vue'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from '@/components/ui/table'
 import { computed } from 'vue'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 
 const props = defineProps({
   application: Object,
   resource: Object,
+  evaluationcriteria: {
+    type: Object,
+    default: () => ({})
+  },
   statusOptions: {
     type: Array,
     default: () => [
@@ -36,32 +32,27 @@ const props = defineProps({
 function formatDate(value) {
   if (!value || value === '1970-01-01T00:00:01.000000Z') return 'Non soumis'
   return new Date(value).toLocaleDateString('fr-FR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+    year: 'numeric', month: 'long', day: 'numeric',
+    hour: '2-digit', minute: '2-digit'
   })
 }
 
 function getBadgeVariant(status) {
   const variants = {
-    draft: 'warning',
-    submitted: 'info',
-    approved: 'success',
-    rejected: 'destructive'
+    draft: 'warning', submitted: 'info',
+    approved: 'success', rejected: 'destructive'
   }
   return variants[status] || 'default'
 }
 
 const formFields = computed(() => {
   if (!props.application.form_data) return []
-  
+
   try {
-    const data = typeof props.application.form_data === 'string' 
+    const data = typeof props.application.form_data === 'string'
       ? JSON.parse(props.application.form_data)
       : props.application.form_data
-    
+
     return Object.entries(data).map(([key, field]) => ({
       id: key,
       label: field.label || 'Sans libellé',
@@ -77,14 +68,26 @@ const formFields = computed(() => {
 
 function updateStatus(newStatus) {
   router.put(props.resource.routes.update.replace(':id', props.application.id), {
-    status: newStatus,
+    status: newStatus
+  })
+}
+
+
+function toggleCheck(item) {
+  router.put(`/evaluation-items/${item.id}/toggle`, {
+    is_checked: !item.is_checked,
+  }, {
     preserveScroll: true,
     onSuccess: () => {
-      // Vous pouvez utiliser votre système de notification ici
-      console.log('Statut mis à jour avec succès')
+      item.is_checked = !item.is_checked
+    },
+    onError: () => {
+      console.error('Erreur lors de la mise à jour')
     }
   })
 }
+
+
 </script>
 
 <template>
@@ -210,6 +213,43 @@ function updateStatus(newStatus) {
             </Table>
           </div>
         </CardContent>
+
+        <CardContent class="border-t pt-4">
+          <h3 class="text-lg font-semibold mb-4">Éléments d'évaluation</h3>
+          
+          <Table v-if="props.evaluationcriteria?.evaluation_criteria_items?.length">
+            <TableHeader>
+              <TableRow>
+                <TableHead class="font-bold">Titre</TableHead>
+                <TableHead class="font-bold">Description</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow
+                v-for="item in props.evaluationcriteria.evaluation_criteria_items"
+                :key="item.id"
+              >
+                <TableCell class="font-medium font-bold">{{ item.title }}</TableCell>
+                <TableCell class="whitespace-pre-line">{{ item.description }}</TableCell>
+                <TableCell class="text-center">
+                  <input
+                    type="checkbox"
+                    :checked="item.is_checked"
+                    @change="toggleCheck(item)"
+                    class="h-5 w-5 accent-primary"
+                  />
+                </TableCell>
+              </TableRow>
+            </TableBody>
+
+
+          </Table>
+
+          <div v-else class="text-center py-4 text-gray-500">
+            Aucun élément d'évaluation défini
+          </div>
+        </CardContent>
+
 
         <CardFooter class="flex justify-between items-center border-t pt-4">
           <div class="text-sm text-gray-500">

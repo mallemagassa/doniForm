@@ -23,6 +23,9 @@ class GenerateResourcePermissions extends Command
             \App\Resources\Admin\RegionResource::class,
             \App\Resources\Admin\FormProgramResource::class,
             \App\Resources\Admin\RoleResource::class,
+            \App\Resources\Admin\GrilleLabelResource::class,
+            \App\Resources\Admin\GrilleItemResource::class
+
         ];
 
         $actions = ['viewAny', 'view', 'create', 'update', 'delete', 'restore', 'forceDelete'];

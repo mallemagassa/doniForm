@@ -9,7 +9,10 @@ use App\Models\Document;
 use App\Models\Evaluation;
 use App\Models\Application;
 use App\Resources\Resource;
+use Illuminate\Support\Str;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use App\Models\EvaluationCriteriaItem;
 use App\Resources\Builders\FormBuilder;
 use App\Resources\Builders\TableBuilder;
 use App\Resources\Concerns\HasResourceData;
@@ -59,39 +62,89 @@ class ApplicationResource extends Resource
             ->toArray();
     }
 
+   
 
     public static function index(): \Inertia\Response
     {
         $table = (new TableBuilder(static::$model))
-        ->column('num_candidat', 'N° candidat')
-        ->column('user.name', 'Nom candidat')
-        ->column('program.title', 'Programme')
-        ->column('submitted_at', 'Date soumission')
-        ->column('status', 'Status')
-        // ->column('notes', 'Notes')
-        // ->column('form_data', 'Form Data')
-        ->make();
-
+            ->with([
+                'user',
+                'program.evaluationCriteria.evaluationCriteriaItems'
+            ])
+            ->column('num_candidat', 'N° candidat')
+            ->column('user.name', 'Nom candidat')
+            ->column('program.title', 'Programme')
+            ->column('submitted_at', 'Date soumission')
+            ->column('status', 'Status')
+            ->columnCallback('checked_items', 'Critère de sélection', function ($application) {
+                $items = optional(optional($application->program)->evaluationCriteria)->evaluationCriteriaItems ?? collect();
+    
+                $total = $items->count();
+                $checked = $items->where('is_checked', true)->count();
+    
+                return "$checked / $total";
+            })
+            ->make();
+    
         return Inertia::render(static::getComponentPath('index'), [
             'table' => $table,
             'resource' => static::getResourceData(),
         ]);
     }
+    
+    public function showCustomPage(string $panel, string $page)
+    {
+        $table = (new TableBuilder(static::$model))
+            ->query(function ($query) {
+                $query->where('status', 'approved');
+            })
+            ->with([
+                'user',
+                'program' => function($query) {
+                    $query->with([
+                        'grilleLabels.grilleItems',
+                        'evaluationCriteria.evaluationCriteriaItems',
+                        'region'
+                    ]);
+                }
+            ])
+            ->column('num_candidat', 'N° candidat')
+            ->column('user.name', 'Nom candidat')
+            ->column('program.title', 'Programme')
+            ->column('submitted_at', 'Date soumission')
+            ->make();
+    
+        return Inertia::render("{$panel}/Pages/" . Str::studly($page), [
+            'table' => $table,
+            'resource' => static::getResourceData(),
+        ]);
+    }
+
 
     public static function show($id): \Inertia\Response
     {
-        
         $application = static::$model::with([
-            'user', // Charge seulement l'id et le nom de l'utilisateur
-            'program', // Charge seulement l'id et le titre du programme
-            // Ajoutez d'autres relations si nécessaire
+            'user',
+            'program.evaluationCriteria.evaluationCriteriaItems',
         ])->findOrFail($id);
     
         return Inertia::render(static::getComponentPath('show'), [
             'application' => $application,
             'resource' => static::getResourceData($application),
+            'evaluationcriteria' => $application->program->evaluationCriteria ?? null,
         ]);
     }
+
+    public function toggle(Request $request, $id)
+    {
+        $item = EvaluationCriteriaItem::findOrFail($id);
+        $item->is_checked = $request->boolean('is_checked');
+        $item->save();
+
+        return redirect()->back()->with('success', 'Mise à jour effectuée.');
+
+    }
+    
     
     public static function create(): \Inertia\Response
     {

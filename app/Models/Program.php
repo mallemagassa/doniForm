@@ -30,9 +30,14 @@ class Program extends Model
         return $this->hasMany(Application::class);
     }
 
-    public function evaluationCriteria(): HasMany
+    public function grilleLabels(): HasMany
     {
-        return $this->hasMany(EvaluationCriteria::class);
+        return $this->hasMany(GrilleLabel::class);
+    }
+
+    public function evaluationCriteria(): HasOne
+    {
+        return $this->hasOne(EvaluationCriteria::class);
     }
 
 

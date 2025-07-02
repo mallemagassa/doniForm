@@ -8,13 +8,26 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use App\Http\Middleware\EnsurePanelAccess;
-
+use App\Models\Application;
+use App\Resources\Admin\ApplicationResource;
 
 class PanelServiceProvider extends ServiceProvider
 {
     protected static array $panels = [];
 
     public static string $defaultPanel = 'admin';
+
+    protected static array $customLinks = [];
+
+    public static function registerCustomLinks(array $links): void
+    {
+        static::$customLinks = array_merge(static::$customLinks, $links);
+    }
+
+    public static function getCustomLinks(string $panel): array
+    {
+        return static::$customLinks[$panel] ?? [];
+    }
 
     public static function registerPanels(array $panels): void
     {
@@ -49,6 +62,15 @@ class PanelServiceProvider extends ServiceProvider
                 foreach ($config['resources'] as $resource) {
                     $this->registerResourceRoutes($resource, $panel);
                 }
+
+                foreach (PanelServiceProvider::getCustomLinks($panel) as $link) {
+                    Route::get($link['path'], [ApplicationResource::class, 'showCustomPage'])
+                        ->defaults('panel', $panel)
+                        ->defaults('page', $link['name'])
+                        ->name("{$panel}." . $link['routeName'])
+                        ->middleware(array_merge($config['middleware'], [EnsurePanelAccess::class], ['verified']));
+                }
+                
             });
     }
 
