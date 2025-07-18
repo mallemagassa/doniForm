@@ -119,48 +119,24 @@ const closeModal = () => {
 
 const props = defineProps({
   table: {
-    type: Object as () => {
-      records: any[];
-      columns: Record<string, string>;
-      current_page?: number;
-      per_page?: number;
-      total?: number;
-      last_page?: number;
-    },
+    type: Object,
     required: true
   },
-  columns: {
-    type: Object,
-    default: () => ({})
-  },
   programs: {
-    type: Array as () => Program[],
+    type: Array,
     required: true
   },
   resource: {
-    type: Object as () => {
-      label: string
-      routes: {
-        destroy: string
-        index: string
-        create: string
-        show: string
-      }
-      relations?: Record<string, any>
-    },
-    required: true
-  },
-  filters: {
     type: Object,
-    default: () => ({})
+    required: true
   },
   search: {
     type: String,
     default: ''
   },
-  pagination: {
+  sort: {
     type: Object,
-    default: () => ({ current_page: 1, per_page: 10, total: 0 })
+    default: () => ({ field: 'created_at', direction: 'desc' })
   }
 });
 
@@ -226,7 +202,7 @@ const formattedColumns = computed(() => {
   return [defaultSelectColumn, ...dynamicColumns, defaultActionsColumn];
 });
 
-
+console.log(props.table)
 </script>
 
 <template>
@@ -241,27 +217,11 @@ const formattedColumns = computed(() => {
           </Button>
         </div>
       </div>
-      
       <KizzaTable 
-        :data="table.records" 
+        :data="table.records.data"
         :columns="formattedColumns"
-        :routes="{
-          index: resource.routes.index,
-          create: resource.routes.create,
-          show: resource.routes.show,
-          destroy: resource.routes.destroy
-        }"
-        :filters="filters"
-        :search="search"
-        :pagination="{
-          current_page: table.current_page ?? 1,
-          per_page: table.per_page ?? 10,
-          total: table.total ?? 0,
-          last_page: table.last_page ?? 1
-        }"
+        :routes="resource.routes"
       />
-
-
 
       <!-- Dans votre template, avant le KizzaModal -->
     <div class="fixed inset-0 flex items-end px-4 py-6 pointer-events-none sm:p-6 sm:items-start z-50">

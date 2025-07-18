@@ -46,9 +46,6 @@ class UserResource extends Resource
 
     public static function index(Request $request): \Inertia\Response
     {
-        $filters = $request->has('filters') ? $request->input('filters') : [];
-        $search = $request->input('search', '');
-        
         $table = (new TableBuilder(static::$model))
         ->column('name', 'Nom')
         ->column('email', 'Email')
@@ -62,14 +59,6 @@ class UserResource extends Resource
         return  Inertia::render(static::getComponentPath('index'), [
             'table' => $table,
             'resource' => static::getResourceData(),
-            'filters' => $filters,
-            'search' => $search,
-            'pagination' => [
-                'per_page' => $table['per_page'],
-                'current_page' => $table['current_page'],
-                'total' => $table['total'],
-                'last_page' => $table['last_page'],
-            ],
         ]);
     }
 

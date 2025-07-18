@@ -167,22 +167,9 @@ const formattedColumns = computed(() => {
         </Link>
       </div>
       <KizzaTable 
-        :data="table.records" 
+        :data="table.records.data"
         :columns="formattedColumns"
-        :routes="{
-          index: resource.routes.index,
-          create: resource.routes.create,
-          show: resource.routes.show,
-          destroy: resource.routes.destroy
-        }"
-        :filters="filters"
-        :search="search"
-        :pagination="{
-          current_page: table.current_page ?? 1,
-          per_page: table.per_page ?? 10,
-          total: table.total ?? 0,
-          last_page: table.last_page ?? 1
-        }"
+        :routes="resource.routes"
       />
     </div>
   </AppLayout>

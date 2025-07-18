@@ -5,6 +5,8 @@ namespace App\Resources\Builders;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
+
 
 class TableBuilder
 {
@@ -71,7 +73,7 @@ class TableBuilder
         return $this;
     }
 
-    public function make(): array
+    public function make(Request $request): array
     {
         $this->query->with($this->relations);
 

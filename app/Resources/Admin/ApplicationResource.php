@@ -59,72 +59,65 @@ class ApplicationResource extends Resource
     }
 
    
+    public static function index(Request $request): \Inertia\Response
+    {
+        $table = (new TableBuilder(Application::class))
+        ->with(['program.evaluationCriteria.evaluationCriteriaItems'])
+        ->column('num_candidat', 'N° Candidat')
+        ->column('program.title', 'Programme')
+        ->column('submitted_at', 'Date de soumission')
+        ->column('status', 'Statut')
+        ->columnCallback('checked_items', 'Critères validés', function ($app) {
+            $items = optional($app->program->evaluationCriteria)->evaluationCriteriaItems ?? collect();
+            return $items->where('is_checked', true)->count().'/'.$items->count();
+        })
+        ->make($request);
 
-    // public static function index(): \Inertia\Response
+        return Inertia::render(static::getComponentPath('index'), [
+            'table' => $table,
+            'programs' => Program::all(['id', 'title']),
+            'resource' => static::getResourceData(),
+        ]);
+    }
+    
+    // public static function index(Request $request): \Inertia\Response
     // {
+    //     // Récupération correcte des filtres
+    //     $filters = $request->has('filters') ? $request->input('filters') : [];
+    //     $search = $request->input('search', '');
+
+    //     Log::info('Request params:', [
+    //         'filters' => $filters,
+    //         'search' => $search,
+    //         'all' => $request->all()
+    //     ]);
+
     //     $table = (new TableBuilder(static::$model))
-    //         ->with([
-    //             'program.evaluationCriteria.evaluationCriteriaItems'
-    //         ])
+    //         ->with(['program.evaluationCriteria.evaluationCriteriaItems'])
     //         ->column('num_candidat', 'N° candidat')
     //         ->column('program.title', 'Programme')
     //         ->column('submitted_at', 'Date soumission')
     //         ->column('status', 'Status')
     //         ->columnCallback('checked_items', 'Critère de sélection', function ($application) {
     //             $items = optional(optional($application->program)->evaluationCriteria)->evaluationCriteriaItems ?? collect();
-    
-    //             $total = $items->count();
-    //             $checked = $items->where('is_checked', true)->count();
-    
-    //             return "$checked / $total";
+    //             return $items->where('is_checked', true)->count().'/'.$items->count();
     //         })
-    //         ->make();
-    
+    //         ->make($request);
+
     //     return Inertia::render(static::getComponentPath('index'), [
     //         'table' => $table,
     //         'programs' => Program::all(['id', 'title']),
     //         'resource' => static::getResourceData(),
+    //         'filters' => $filters,
+    //         'search' => $search,
+    //         'pagination' => [
+    //             'per_page' => $table['per_page'],
+    //             'current_page' => $table['current_page'],
+    //             'total' => $table['total'],
+    //             'last_page' => $table['last_page'],
+    //         ],
     //     ]);
     // }
-
-    public static function index(Request $request): \Inertia\Response
-    {
-        // Récupération correcte des filtres
-        $filters = $request->has('filters') ? $request->input('filters') : [];
-        $search = $request->input('search', '');
-
-        Log::info('Request params:', [
-            'filters' => $filters,
-            'search' => $search,
-            'all' => $request->all()
-        ]);
-
-        $table = (new TableBuilder(static::$model))
-            ->with(['program.evaluationCriteria.evaluationCriteriaItems'])
-            ->column('num_candidat', 'N° candidat')
-            ->column('program.title', 'Programme')
-            ->column('submitted_at', 'Date soumission')
-            ->column('status', 'Status')
-            ->columnCallback('checked_items', 'Critère de sélection', function ($application) {
-                $items = optional(optional($application->program)->evaluationCriteria)->evaluationCriteriaItems ?? collect();
-                return $items->where('is_checked', true)->count().'/'.$items->count();
-            })
-            ->make($request);
-
-        return Inertia::render(static::getComponentPath('index'), [
-            'table' => $table,
-            'programs' => Program::all(['id', 'title']),
-            'resource' => static::getResourceData(),
-            'filters' => $filters,
-            'search' => $search,
-            'pagination' => [
-                'per_page' => $table['per_page'],
-                'current_page' => $table['current_page'],
-                'total' => $table['total'],
-                'last_page' => $table['last_page'],
-            ],
-        ]);
-    }
 
     public function showCustomPage(string $panel, string $page, Request $request)
     {
