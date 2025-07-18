@@ -12,6 +12,7 @@ class Program extends Model
     protected $fillable = [
         'title',
         'sigle',
+        'nbr_membre_jury',
         'description',
         'region_id',
         'start_date',

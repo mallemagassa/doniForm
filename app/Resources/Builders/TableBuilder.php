@@ -3,8 +3,10 @@
 namespace App\Resources\Builders;
 
 use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 
 class TableBuilder
 {
@@ -61,29 +63,83 @@ class TableBuilder
         return $this;
     }
 
-    public function make(): array
+    public function make(Request $request): array
     {
+        // Log::info('Making table with request:', [
+        //     'filters' => $request->input('filters'),
+        //     'search' => $request->input('search')
+        // ]);
+
+        // dd($request->input('filters'));
+    
+        $this->applyFilters($request);
         $this->query->with($this->relations);
-
-        $records = $this->query->paginate(100);
-
-        $records->getCollection()->transform(function ($item) {
-            foreach ($this->columns as $column => $label) {
-                if (Str::contains($column, '.')) {
-                    $item->{$column} = data_get($item, $column);
-                }
-            }
-
-            foreach ($this->callbacks as $key => $callback) {
-                $item->{$key} = $callback($item);
-            }
-
-            return $item;
-        });
-
+    
+        $perPage = $request->input('per_page', 10);
+        $page = $request->input('page', 1);
+    
+        $records = $this->query->paginate($perPage, ['*'], 'page', $page);
+    
         return [
+            'records' => $records,
             'columns' => $this->columns,
-            'records' => $records
+            'per_page' => $records->perPage(),
+            'current_page' => $records->currentPage(),
+            'total' => $records->total(),
+            'last_page' => $records->lastPage(),
         ];
     }
+    
+    protected function applyFilters(Request $request): void
+    {
+        $filters = $request->input('filters', []);
+        Log::info('Applying filters:', $filters);
+    
+        foreach ($filters as $column => $value) {
+            if (empty($value) && $value !== '0') {
+                continue;
+            }
+    
+            try {
+                // Si le point fait partie du nom de colonne (pas une relation)
+                if (str_contains($column, '.') && !$this->isRelationColumn($column)) {
+                    // Remplacer les points par des underscores pour le nom de colonne
+                    $columnName = str_replace('.', '_', $column);
+                    $this->query->where($columnName, 'LIKE', "%{$value}%");
+                } 
+                // Si c'est une vraie relation
+                elseif (str_contains($column, '.')) {
+                    $this->applyRelationFilter($column, $value);
+                } 
+                // Colonne simple
+                else {
+                    $this->query->where($column, 'LIKE', "%{$value}%");
+                }
+            } catch (\Exception $e) {
+                Log::error("Failed to apply filter on column {$column}: " . $e->getMessage());
+                continue;
+            }
+        }
+    }
+
+    protected function applyRelationFilter(string $column, string $value): void
+    {
+        $relations = explode('.', $column);
+        $field = array_pop($relations);
+        $relation = implode('.', $relations);
+
+        $this->query->whereHas($relation, function($query) use ($field, $value) {
+            $query->where($field, 'LIKE', "%{$value}%");
+        });
+    }
+        
+    protected function isRelationColumn(string $column): bool
+    {
+        $relations = explode('.', $column);
+        array_pop($relations); // Enlever le dernier élément (le champ)
+        $relationPath = implode('.', $relations);
+        
+        return in_array($relationPath, $this->relations);
+    }
+
 }

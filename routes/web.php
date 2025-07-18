@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\ProgramController;
 use App\Resources\Admin\ApplicationResource;
+use App\Resources\Admin\ProgramResource;
 
 // // Accueil
 // Route::get('/', function () {
@@ -16,7 +17,12 @@ use App\Resources\Admin\ApplicationResource;
 
 // Routes FilePond avec préfixe 'admin/filepond' et middleware 'auth'
 Route::put('/evaluation-items/{id}/toggle', [ApplicationResource::class, 'toggle'])->name('evaluation-items.toggle');
+Route::post('/note-items', [ApplicationResource::class, 'storeNote'])->name('note-items.store');
+Route::put('/note-items/{noteItem}', [ApplicationResource::class, 'updateNote'])->name('note-items.update');
+Route::post('/import', [ProgramResource::class, 'import'])->name('import.process');
+Route::post('/import-app', [ApplicationResource::class, 'import'])->name('import.process.app');
 Route::middleware(['web', 'auth'])->prefix('admin')->group(function () {
+
 
     Route::prefix('filepond')->name('filepond.')->group(function () {
 

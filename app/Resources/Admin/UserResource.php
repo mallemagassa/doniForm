@@ -5,6 +5,7 @@ namespace App\Resources\Admin;
 use App\Models\User;
 use Inertia\Inertia;
 use App\Resources\Resource;
+use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
@@ -43,9 +44,10 @@ class UserResource extends Resource
     }
 
 
-    public static function index(): \Inertia\Response
+    public static function index(Request $request): \Inertia\Response
     {
-        // Gate::authorize('viewAny user_resource', static::$model);
+        $filters = $request->has('filters') ? $request->input('filters') : [];
+        $search = $request->input('search', '');
         
         $table = (new TableBuilder(static::$model))
         ->column('name', 'Nom')
@@ -53,13 +55,21 @@ class UserResource extends Resource
         // ->column('email_verified_at', 'Email Verified At')
         // ->column('password', 'Password')
         // ->column('remember_token', 'Remember Token')
-        ->make();
+        ->make($request);
 
         //viewAny user_resource
 
-        return Inertia::render(static::getComponentPath('index'), [
+        return  Inertia::render(static::getComponentPath('index'), [
             'table' => $table,
             'resource' => static::getResourceData(),
+            'filters' => $filters,
+            'search' => $search,
+            'pagination' => [
+                'per_page' => $table['per_page'],
+                'current_page' => $table['current_page'],
+                'total' => $table['total'],
+                'last_page' => $table['last_page'],
+            ],
         ]);
     }
 

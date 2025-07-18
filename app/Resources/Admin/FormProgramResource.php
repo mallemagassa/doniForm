@@ -2,13 +2,14 @@
 
 namespace App\Resources\Admin;
 
-use App\Models\FormProgram;
 use Inertia\Inertia;
+use App\Models\Program;
+use App\Models\FormProgram;
 use App\Resources\Resource;
+use Illuminate\Http\Request;
 use App\Resources\Builders\FormBuilder;
 use App\Resources\Builders\TableBuilder;
 use App\Resources\Concerns\HasResourceData;
-use App\Models\Program;
 
 class FormProgramResource extends Resource
 {
@@ -29,12 +30,12 @@ class FormProgramResource extends Resource
     }
 
 
-    public static function index(): \Inertia\Response
+    public static function index(Request $request): \Inertia\Response
     {
         $table = (new TableBuilder(FormProgram::class))
         ->column('name', 'Nom')
         ->column('program.title', 'Programme')
-        ->make();
+        ->make($request);
 
         // dd($table);
 

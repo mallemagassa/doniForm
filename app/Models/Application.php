@@ -10,7 +10,7 @@ class Application extends Model
 {
     protected $fillable = [
         'num_candidat',
-        'user_id',
+        // 'user_id',
         'program_id',
         'status',
         'submitted_at',
@@ -28,10 +28,10 @@ class Application extends Model
         return $this->belongsTo(Program::class);
     }
 
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
+    // public function user(): BelongsTo
+    // {
+    //     return $this->belongsTo(User::class);
+    // }
 
     public function evaluations(): HasMany
     {

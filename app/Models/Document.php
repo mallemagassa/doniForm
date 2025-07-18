@@ -13,11 +13,7 @@ class Document extends Model
         'file_path',
     ];
 
-    protected $casts = [
-        'file_size' => 'integer',
-    ];
-
-    public function application(): BelongsTo
+      public function application(): BelongsTo
     {
         return $this->belongsTo(Application::class);
     }

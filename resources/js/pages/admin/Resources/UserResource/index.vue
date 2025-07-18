@@ -18,30 +18,76 @@ name: string;
   remember_token: string;
 }
 
+// const props = defineProps({
+//   table: {
+//     type: Object as () => {
+//       records: {
+//         data: User[]
+//       }
+//       columns: ColumnDef<User>[]
+//     },
+//     required: true
+//   },
+//   resource: {
+//     type: Object as () => {
+//       label: string
+//       routes: {
+//         edit: string
+//         destroy: string
+//         index: string
+//         create: string
+//       }
+//       relations?: Record<string, any>
+//     },
+//     required: true
+//   }
+// });
+
 const props = defineProps({
   table: {
     type: Object as () => {
-      records: {
-        data: User[]
-      }
-      columns: ColumnDef<User>[]
+      records: any[];
+      columns: Record<string, string>;
+      current_page?: number;
+      per_page?: number;
+      total?: number;
+      last_page?: number;
     },
     required: true
+  },
+  columns: {
+    type: Object,
+    default: () => ({})
   },
   resource: {
     type: Object as () => {
       label: string
       routes: {
-        edit: string
         destroy: string
         index: string
         create: string
+        show: string
       }
       relations?: Record<string, any>
     },
     required: true
+  },
+  filters: {
+    type: Object,
+    default: () => ({})
+  },
+  search: {
+    type: String,
+    default: ''
+  },
+  pagination: {
+    type: Object,
+    default: () => ({ current_page: 1, per_page: 10, total: 0 })
   }
+
 });
+
+
 
 const formattedColumns = computed(() => {
   const defaultSelectColumn = {
@@ -121,9 +167,22 @@ const formattedColumns = computed(() => {
         </Link>
       </div>
       <KizzaTable 
-        :data="table.records.data"
+        :data="table.records" 
         :columns="formattedColumns"
-        :routes="resource.routes"
+        :routes="{
+          index: resource.routes.index,
+          create: resource.routes.create,
+          show: resource.routes.show,
+          destroy: resource.routes.destroy
+        }"
+        :filters="filters"
+        :search="search"
+        :pagination="{
+          current_page: table.current_page ?? 1,
+          per_page: table.per_page ?? 10,
+          total: table.total ?? 0,
+          last_page: table.last_page ?? 1
+        }"
       />
     </div>
   </AppLayout>

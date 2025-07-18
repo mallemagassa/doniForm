@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->string('sigle');
+            $table->string('nbr_membre_jury');
             $table->text('description')->nullable();
             $table->foreignId('region_id')->constrained('regions')->onDelete('cascade');
             $table->date('start_date')->nullable();

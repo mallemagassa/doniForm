@@ -2,17 +2,19 @@
 
 namespace App\Resources\Admin;
 
-use App\Models\Program;
+use App\Models\User;
 use Inertia\Inertia;
+use App\Models\Region;
+use App\Models\Program;
+use App\Models\FormField;
+use App\Models\Application;
 use App\Resources\Resource;
+use Illuminate\Http\Request;
+use App\Models\EvaluationCriteria;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Resources\Builders\FormBuilder;
 use App\Resources\Builders\TableBuilder;
 use App\Resources\Concerns\HasResourceData;
-use App\Models\User;
-use App\Models\Application;
-use App\Models\EvaluationCriteria;
-use App\Models\FormField;
-use App\Models\Region;
 
 class ProgramResource extends Resource
 {
@@ -68,19 +70,34 @@ class ProgramResource extends Resource
             ->toArray();
     }
 
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:2048',
+        ]);
 
-    public static function index(): \Inertia\Response
+        try {
+            Excel::import(new Program, $request->file('file'));
+            return back()->with('success', 'Programs imported successfully!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error importing file: ' . $e->getMessage());
+        }
+    }
+
+
+    public static function index(Request $request): \Inertia\Response
     {
         $table = (new TableBuilder(static::$model))
         ->column('title', 'Titre')
         ->column('sigle', 'Sigle')
+        ->column('nbr_membre_jury', 'Nb membres jury')
         // ->column('description', 'Description')
         ->column('region.name', 'Region')
         ->column('start_date', 'Date Debut')
         ->column('end_date', 'Date Fin')
         ->column('status', 'Status')
         ->column('user.name', 'Utilisateur')
-        ->make();
+        ->make($request);
 
         
         return Inertia::render(static::getComponentPath('index'), [
@@ -109,6 +126,7 @@ class ProgramResource extends Resource
         $form = (new FormBuilder())
         ->field('title', 'text', ['required' => true])
         ->field('sigle', 'text', ['required' => true])
+        ->field('nbr_membre_jury', 'number', ['required' => true])
         ->field('description', 'textarea', ['required' => true])
         ->field('region_id', 'select', [
                         'options' => Region::pluck('name', 'id'),
@@ -142,6 +160,7 @@ class ProgramResource extends Resource
         $data = request()->validate([
             'title' => 'string|required',
             'sigle' => 'string|required',
+            'nbr_membre_jury' => 'numeric|required',
             'description' => 'string|required',
             'region_id' => 'required|exists:regions,id',
             'start_date' => 'required|date',
@@ -168,6 +187,10 @@ class ProgramResource extends Resource
         ->field('sigle', 'text', [
                         'required' => true,
                         'value' => $program->sigle
+                    ])
+        ->field('nbr_membre_jury', 'number', [
+                        'required' => true,
+                        'value' => $program->nbr_membre_jury
                     ])
         ->field('description', 'textarea', [
                         'required' => true,
@@ -218,6 +241,7 @@ class ProgramResource extends Resource
         $data = request()->validate([
             'title' => 'string|required',
             'sigle' => 'string|required',
+            'nbr_membre_jury' => 'numeric|required',
             'description' => 'string|required',
             'region_id' => 'required|exists:regions,id',
             'start_date' => 'date|required',

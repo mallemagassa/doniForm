@@ -6,12 +6,16 @@ use App\Models\User;
 use Inertia\Inertia;
 use App\Models\Program;
 use App\Models\Document;
+use App\Models\NoteItem;
 use App\Models\Evaluation;
 use App\Models\Application;
 use App\Resources\Resource;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Imports\ApplicationsImport;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Gate;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Models\EvaluationCriteriaItem;
 use App\Resources\Builders\FormBuilder;
 use App\Resources\Builders\TableBuilder;
@@ -23,7 +27,7 @@ class ApplicationResource extends Resource
     
     protected static string $model = Application::class;
     protected static string $panel = 'admin';
-    public static string $label = 'Candidats';
+    public static string $label = 'Candidature';
 
     
     public static function programOptions(): array
@@ -35,14 +39,6 @@ class ApplicationResource extends Resource
             ->toArray();
     }
 
-    public static function userOptions(): array
-    {
-        return User::query()
-            ->select(['id', 'name'])
-            ->get()
-            ->pluck('name', 'id')
-            ->toArray();
-    }
 
     public static function evaluationsOptions(): array
     {
@@ -64,67 +60,164 @@ class ApplicationResource extends Resource
 
    
 
-    public static function index(): \Inertia\Response
+    // public static function index(): \Inertia\Response
+    // {
+    //     $table = (new TableBuilder(static::$model))
+    //         ->with([
+    //             'program.evaluationCriteria.evaluationCriteriaItems'
+    //         ])
+    //         ->column('num_candidat', 'N° candidat')
+    //         ->column('program.title', 'Programme')
+    //         ->column('submitted_at', 'Date soumission')
+    //         ->column('status', 'Status')
+    //         ->columnCallback('checked_items', 'Critère de sélection', function ($application) {
+    //             $items = optional(optional($application->program)->evaluationCriteria)->evaluationCriteriaItems ?? collect();
+    
+    //             $total = $items->count();
+    //             $checked = $items->where('is_checked', true)->count();
+    
+    //             return "$checked / $total";
+    //         })
+    //         ->make();
+    
+    //     return Inertia::render(static::getComponentPath('index'), [
+    //         'table' => $table,
+    //         'programs' => Program::all(['id', 'title']),
+    //         'resource' => static::getResourceData(),
+    //     ]);
+    // }
+
+    public static function index(Request $request): \Inertia\Response
     {
+        // Récupération correcte des filtres
+        $filters = $request->has('filters') ? $request->input('filters') : [];
+        $search = $request->input('search', '');
+
+        Log::info('Request params:', [
+            'filters' => $filters,
+            'search' => $search,
+            'all' => $request->all()
+        ]);
+
         $table = (new TableBuilder(static::$model))
-            ->with([
-                'user',
-                'program.evaluationCriteria.evaluationCriteriaItems'
-            ])
+            ->with(['program.evaluationCriteria.evaluationCriteriaItems'])
             ->column('num_candidat', 'N° candidat')
-            ->column('user.name', 'Nom candidat')
             ->column('program.title', 'Programme')
             ->column('submitted_at', 'Date soumission')
             ->column('status', 'Status')
             ->columnCallback('checked_items', 'Critère de sélection', function ($application) {
                 $items = optional(optional($application->program)->evaluationCriteria)->evaluationCriteriaItems ?? collect();
-    
-                $total = $items->count();
-                $checked = $items->where('is_checked', true)->count();
-    
-                return "$checked / $total";
+                return $items->where('is_checked', true)->count().'/'.$items->count();
             })
-            ->make();
-    
+            ->make($request);
+
         return Inertia::render(static::getComponentPath('index'), [
             'table' => $table,
+            'programs' => Program::all(['id', 'title']),
             'resource' => static::getResourceData(),
+            'filters' => $filters,
+            'search' => $search,
+            'pagination' => [
+                'per_page' => $table['per_page'],
+                'current_page' => $table['current_page'],
+                'total' => $table['total'],
+                'last_page' => $table['last_page'],
+            ],
         ]);
     }
-    
-    public function showCustomPage(string $panel, string $page)
+
+    public function showCustomPage(string $panel, string $page, Request $request)
     {
         $table = (new TableBuilder(static::$model))
             ->query(function ($query) {
                 $query->where('status', 'approved');
             })
             ->with([
-                'user',
                 'program' => function($query) {
                     $query->with([
-                        'grilleLabels.grilleItems',
-                        'evaluationCriteria.evaluationCriteriaItems',
+                        'grilleLabels.grilleItems.noteItems', // Chargement des notes
                         'region'
                     ]);
                 }
             ])
             ->column('num_candidat', 'N° candidat')
-            ->column('user.name', 'Nom candidat')
             ->column('program.title', 'Programme')
             ->column('submitted_at', 'Date soumission')
-            ->make();
-    
+            ->make($request);
+
         return Inertia::render("{$panel}/Pages/" . Str::studly($page), [
             'table' => $table,
             'resource' => static::getResourceData(),
         ]);
     }
 
+    public function storeNote(Request $request)
+    {
+        $validated = $request->validate([
+            'note' => 'required|numeric|min:0',
+            'grille_item_id' => 'required|exists:grille_items,id'
+        ]);
+
+        $noteItem = NoteItem::create([
+            'note' => abs($validated['note']),
+            'grille_item_id' => $validated['grille_item_id']
+        ]);
+        
+        return back()->with([
+            'success' => true,
+            'noteItem' => $noteItem,
+            'message' => 'Note enregistrée avec succès'
+        ]);
+    }
+
+    public function updateNote(Request $request, NoteItem $noteItem)
+    {
+        $validated = $request->validate([
+            'note' => 'required|numeric|min:0'
+        ]);
+        
+        $noteItem->update([
+            'note' => abs($validated['note'])
+        ]);
+
+        return back()->with([
+            'success' => true,
+            'noteItem' => $noteItem,
+            'message' => 'Note mise à jour avec succès'
+        ]);
+    }
+    // public function showCustomPage(string $panel, string $page)
+    // {
+    //     $table = (new TableBuilder(static::$model))
+    //         ->query(function ($query) {
+    //             $query->where('status', 'approved');
+    //         })
+    //         ->with([
+    //             'user',
+    //             'program' => function($query) {
+    //                 $query->with([
+    //                     'grilleLabels.grilleItems',
+    //                     'evaluationCriteria.evaluationCriteriaItems',
+    //                     'region'
+    //                 ]);
+    //             }
+    //         ])
+    //         ->column('num_candidat', 'N° candidat')
+    //         ->column('user.name', 'Nom candidat')
+    //         ->column('program.title', 'Programme')
+    //         ->column('submitted_at', 'Date soumission')
+    //         ->make();
+    
+    //     return Inertia::render("{$panel}/Pages/" . Str::studly($page), [
+    //         'table' => $table,
+    //         'resource' => static::getResourceData(),
+    //     ]);
+    // }
+
 
     public static function show($id): \Inertia\Response
     {
         $application = static::$model::with([
-            'user',
             'program.evaluationCriteria.evaluationCriteriaItems',
         ])->findOrFail($id);
     
@@ -149,10 +242,6 @@ class ApplicationResource extends Resource
     public static function create(): \Inertia\Response
     {
         $form = (new FormBuilder())
-        ->field('user_id', 'select', [
-                        'options' => User::pluck('name', 'id'),
-                        'required' => true
-                    ])
         ->field('program_id', 'select', [
                         'options' => Program::pluck('title', 'id'),
                         'required' => true
@@ -181,7 +270,6 @@ class ApplicationResource extends Resource
     public static function store(): \Illuminate\Http\RedirectResponse
     {
         $data = request()->validate([
-            'user_id' => 'required|exists:users,id',
             'program_id' => 'required|exists:programs,id',
             'submitted_at' => 'string|required',
             'status' => 'string|required',
@@ -200,11 +288,6 @@ class ApplicationResource extends Resource
         $application = static::$model::findOrFail($id);
 
         $form = (new FormBuilder())
-        ->field('user_id', 'select', [
-                        'options' => User::pluck('name', 'id'),
-                        'value' => $application->user_id,
-                        'required' => true
-                    ])
         ->field('program_id', 'select', [
                         'options' => Program::pluck('title', 'id'),
                         'value' => $application->program_id,
@@ -239,6 +322,36 @@ class ApplicationResource extends Resource
             'form' => $form,
             'resource' => static::getResourceData($application),
         ]);
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:2048',
+            'program_id' => 'required|exists:programs,id',
+            'status' => 'required|string',
+            'notes' => 'nullable|string',
+        ]);
+
+        try {
+            $import = new ApplicationsImport(
+                $request->program_id,
+                $request->status,
+                $request->notes
+            );
+            
+            Excel::import($import, $request->file('file'));
+            
+            $count = $import->getRowCount(); // Ajoutez cette méthode à votre classe d'import
+            
+            return back()->with([
+                'success' => 'Importation réussie !',
+                'imported_count' => $count
+            ]);
+            
+        } catch (\Exception $e) {
+            return back()->with('error', 'Erreur lors de l\'import: ' . $e->getMessage());
+        }
     }
 
     public static function update($id): \Illuminate\Http\RedirectResponse

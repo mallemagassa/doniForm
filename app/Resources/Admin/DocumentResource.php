@@ -6,6 +6,7 @@ use Inertia\Inertia;
 use App\Models\Document;
 use App\Models\Application;
 use App\Resources\Resource;
+use Illuminate\Http\Request;
 use App\Resources\Builders\FormBuilder;
 use Illuminate\Support\Facades\Storage;
 use App\Resources\Builders\TableBuilder;
@@ -30,14 +31,14 @@ class DocumentResource extends Resource
     }
 
 
-    public static function index(): \Inertia\Response
+    public static function index(Request $request): \Inertia\Response
     {
         $table = (new TableBuilder(static::$model))
         ->column('application.program.title', 'Application')
         ->column('label', 'Label')
         ->column('file_path', 'Fichier')
         // ->column('uploaded_at', 'Date Telechargement')
-        ->make();
+        ->make($request);
 
         return Inertia::render(static::getComponentPath('index'), [
             'table' => $table,

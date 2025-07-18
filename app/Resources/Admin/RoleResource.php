@@ -5,6 +5,7 @@ namespace App\Resources\Admin;
 use Inertia\Inertia;
 use Inertia\Response;
 use App\Resources\Resource;
+use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use App\Resources\Builders\FormBuilder;
 use App\Resources\Builders\TableBuilder;
@@ -21,14 +22,14 @@ class RoleResource extends Resource
 
     // public static string $group = 'Utilisateurs';
     public static string $group = 'Parametre';
-    public static function index(): Response
+    public static function index(Request $request): Response
     {
         $table = (new TableBuilder(static::$model))
         ->withCount('permissions') // 👈 ajout du count ici
         ->column('name', 'Nom')
         ->column('guard_name', 'Nom du garde')
         ->column('permissions_count', 'Nombre de permissions')
-        ->make();
+        ->make($request);
     
         return Inertia::render(static::getComponentPath('index'), [
             'table' => $table,

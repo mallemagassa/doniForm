@@ -7,6 +7,7 @@ use App\Models\Program;
 use App\Models\GrilleItem;
 use App\Models\GrilleLabel;
 use App\Resources\Resource;
+use Illuminate\Http\Request;
 use App\Resources\Builders\FormBuilder;
 use App\Resources\Builders\TableBuilder;
 use App\Resources\Concerns\HasResourceData;
@@ -40,12 +41,12 @@ class GrilleLabelResource extends Resource
     }
 
 
-    public static function index(): \Inertia\Response
+    public static function index(Request $request): \Inertia\Response
     {
         $table = (new TableBuilder(static::$model))
         ->column('nom', 'Nom')
         ->column('program.title', 'Programme')
-        ->make();
+        ->make($request);
 
         return Inertia::render(static::getComponentPath('index'), [
             'table' => $table,

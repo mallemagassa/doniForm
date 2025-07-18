@@ -4,42 +4,53 @@ import { Head, useForm, Link } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
 import Input from '@/components/ui/input/Input.vue'
 import Button from '@/components/ui/button/Button.vue'
-import Select from '@/components/ui/select/Select.vue'
-import { SelectItem, SelectTrigger, SelectValue, SelectContent } from '@/components/ui/select'
 import { toast } from 'vue-sonner'
-import Textarea from '@/components/ui/textarea/Textarea.vue'
+import Select from '@/components/ui/select/Select.vue'
+import SelectItem from '@/components/ui/select/SelectItem.vue'
+import { SelectTrigger, SelectValue, SelectContent } from '@/components/ui/select'
+import { Plus, Minus } from 'lucide-vue-next'
 
 const props = defineProps({
-  GrilleItem: Object,
+  grilleItem: Object,
   form: Object,
   resource: Object,
 })
 
-// 🔁 Normalisation des dates
-function normalizeDates(GrilleItem, formFields) {
-  const result = { ...GrilleItem }
+// Initialiser le formulaire
+const form = useForm({
+  titre: props.grilleItem.titre,
+  base_notation: props.grilleItem.base_notation,
+  grille_label_id: props.grilleItem.grille_label_id,
+  notes: props.grilleItem.note_items.map(item => ({ 
+    id: item.id,
+    note: item.note 
+  }))
+})
 
-  for (const key in formFields) {
-    const field = formFields[key]
+// Variable pour suivre si le select est initialisé
+const selectInitialized = ref(false)
 
-    if (field.type === 'date' && result[key]) {
-      const isoDate = new Date(result[key])
-      result[key] = isoDate.toISOString().slice(0, 10)
-    }
-  }
+onMounted(() => {
+  // Marquer le select comme initialisé après le rendu
+  selectInitialized.value = true
+})
 
-  return result
+function addNote() {
+  form.notes.push({ note: '' })
 }
 
-// ✅ Formulaire avec dates formatées
-const form = useForm(
-  normalizeDates(props.GrilleItem, props.form)
-)
+function removeNote(index) {
+  form.notes.splice(index, 1)
+}
 
 function submitForm() {
-  form.put(props.resource.routes.update.replace(':id', props.GrilleItem.id), {
-    onSuccess: () => toast.success(`${props.resource.label} mis à jour avec succès`),
-    onError: () => toast.error('Erreur lors de la mise à jour')
+  form.put(props.resource.routes.update.replace(':id', props.grilleItem.id), {
+    onSuccess: () => {
+      toast.success(`${props.resource.label} mis à jour avec succès`)
+    },
+    onError: () => {
+      toast.error('Erreur lors de la mise à jour')
+    }
   })
 }
 
@@ -54,7 +65,6 @@ function getSelectValue(id) {
   // Valeur par défaut
   return id
 }
-
 </script>
 
 <template>
@@ -71,62 +81,98 @@ function getSelectValue(id) {
 
       <form @submit.prevent="submitForm" class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <template v-for="(field, key) in props.form" :key="key">
-             <div v-if="field.type === 'select'" class="space-y-2">
-              <label :for="key" class="block font-medium capitalize">
-                {{ field.label || key }}
-              </label>
-              <Select v-model="form[key]" :required="field.options?.required">
-                <SelectTrigger class="w-full">
-                  <SelectValue :placeholder="field.placeholder || 'Sélectionnez une option'" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem 
-                    v-for="(name, id) in field.options?.options || {}" 
-                    :key="id" 
-                    :value="getSelectValue(id)"
-                  >
-                    {{ name }}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-
-              <span v-if="form.errors[key]" class="text-sm text-red-600">
-                {{ form.errors[key] }}
-              </span>
-            </div>
-
-
-            <div v-else-if="field.type === 'textarea'" class="space-y-2">
-            <label :for="key" class="block font-medium capitalize">
-              {{ key }}
-            </label>
-            <Textarea
-              :id="key"
-              v-model="form[key]"
-              :required="field.options?.required"
-              class=""
-            ></Textarea>
-            <span v-if="form.errors[key]" class="text-sm text-red-600">
-              {{ form.errors[key] }}
+          <!-- Champ titre -->
+          <div class="space-y-2">
+            <label class="block font-medium capitalize">Titre</label>
+            <Input
+              v-model="form.titre"
+              type="text"
+              required
+            />
+            <span v-if="form.errors.titre" class="text-sm text-red-600">
+              {{ form.errors.titre }}
             </span>
           </div>
 
-            <div v-else class="space-y-2">
-              <label :for="key" class="block font-medium capitalize">
-                {{ key }}
-              </label>
-              <Input
-                :id="key"
-                v-model="form[key]"
-                :type="field.type"
-                :required="field.options?.required"
-              />
-              <span v-if="form.errors[key]" class="text-sm text-red-600">
-                {{ form.errors[key] }}
-              </span>
+          <!-- Champ base_notation -->
+          <div class="space-y-2">
+            <label class="block font-medium capitalize">Base notation</label>
+            <Input
+              v-model="form.base_notation"
+              type="number"
+              required
+            />
+            <span v-if="form.errors.base_notation" class="text-sm text-red-600">
+              {{ form.errors.base_notation }}
+            </span>
+          </div>
+
+          <!-- Champ grille_label_id -->
+          <div class="space-y-2">
+            <label class="block font-medium capitalize">Grille label</label>
+            <Select 
+              v-model="form.grille_label_id" 
+              required
+            >
+              <SelectTrigger class="w-full">
+                <SelectValue 
+                  :placeholder="selectInitialized ? '' : 'Chargement...'"
+                />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="(name, id) in props.form.grille_label_id.options.options"
+                  :key="id"
+                  :value="getSelectValue(id)"
+                >
+                  {{ name }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            <span v-if="form.errors.grille_label_id" class="text-sm text-red-600">
+              {{ form.errors.grille_label_id }}
+            </span>
+          </div>
+
+          <!-- Repeater pour les notes -->
+          <div class="space-y-4 col-span-full">
+            <label class="block font-medium capitalize">Notes</label>
+            
+            <div v-for="(item, index) in form.notes" :key="index" class="flex items-end gap-2">
+              <div class="flex-1 space-y-2">
+                <Input
+                  v-model="item.note"
+                  type="number"
+                  required
+                  :max="5"
+                  placeholder="Note (0-5)"
+                />
+                <span v-if="form.errors[`notes.${index}.note`]" class="text-sm text-red-600">
+                  {{ form.errors[`notes.${index}.note`] }}
+                </span>
+              </div>
+              
+              <Button 
+                type="button" 
+                variant="destructive" 
+                size="sm" 
+                @click="removeNote(index)"
+                :disabled="form.notes.length <= 1"
+              >
+                <Minus class="w-4 h-4" />
+              </Button>
             </div>
-          </template>
+            
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm" 
+              @click="addNote"
+            >
+              <Plus class="w-4 h-4 mr-2" />
+              Ajouter une note
+            </Button>
+          </div>
         </div>
 
         <div class="flex gap-2">

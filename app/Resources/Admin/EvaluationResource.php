@@ -2,15 +2,16 @@
 
 namespace App\Resources\Admin;
 
-use App\Models\Evaluation;
+use App\Models\User;
 use Inertia\Inertia;
+use App\Models\Evaluation;
+use App\Models\Application;
 use App\Resources\Resource;
+use Illuminate\Http\Request;
+use App\Models\EvaluationCriteria;
 use App\Resources\Builders\FormBuilder;
 use App\Resources\Builders\TableBuilder;
 use App\Resources\Concerns\HasResourceData;
-use App\Models\Application;
-use App\Models\User;
-use App\Models\EvaluationCriteria;
 
 class EvaluationResource extends Resource
 {
@@ -49,7 +50,7 @@ class EvaluationResource extends Resource
     }
 
 
-    public static function index(): \Inertia\Response
+    public static function index(Request $request): \Inertia\Response
     {
         $table = (new TableBuilder(static::$model))
         ->column('user.name', 'Utilisateur')
@@ -57,7 +58,7 @@ class EvaluationResource extends Resource
         ->column('criterion.label', 'Critere')
         ->column('score', 'Score')
         // ->column('comment', 'Comment')
-        ->make();
+        ->make($request);
 
         return Inertia::render(static::getComponentPath('index'), [
             'table' => $table,

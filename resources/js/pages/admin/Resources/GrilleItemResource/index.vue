@@ -11,10 +11,7 @@ import Button from '@/components/ui/button/Button.vue';
 import { ArrowUpDown, ChevronDown } from 'lucide-vue-next'
 
 interface GrilleItem {
-titre: string;
-  note_1: string;
-  note_2: string;
-  note_3: string;
+  titre: string;
   grille_label_id: string;
 }
 

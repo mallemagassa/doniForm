@@ -4,6 +4,7 @@ namespace App\Resources;
 
 use Inertia\Response;
 use Illuminate\Support\Str;
+use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Model;
 
 abstract class Resource
@@ -37,7 +38,7 @@ abstract class Resource
         return ['viewAny', 'view', 'create', 'update', 'delete', 'restore', 'forceDelete'];
     }
 
-    abstract public static function index(): Response;
+    abstract public static function index(Request $request): Response;
     abstract public static function show(Model $model): Response;
     abstract public static function create(): Response;
     abstract public static function store(): \Illuminate\Http\RedirectResponse;

@@ -4,7 +4,7 @@
         <div class="bg-white p-6 rounded-xl shadow-xl w-[1400px] max-h-[150vh] overflow-auto">
         <div class="flex justify-between items-center mb-4">
             <div class="flex-1 justify-end">
-              <h2 class="text-xl font-semibold text-center">Grille d'évaluation - Préséselection</h2>
+              <h2 class="text-xl font-semibold text-center">{{ title }}</h2>
             </div>
             <button @click="$emit('close')" class="text-gray-600 hover:text-black">✖</button>
         </div>
@@ -15,7 +15,8 @@
   
   <script setup>
   defineProps({
-    open: Boolean
+    open: Boolean,
+    title: String
   });
   defineEmits(['close']);
   </script>

@@ -14,9 +14,7 @@ return new class extends Migration
         Schema::create('grille_items', function (Blueprint $table) {
             $table->id();
             $table->string('titre');
-            $table->integer('note_1');
-            $table->integer('note_2');
-            $table->integer('note_3');
+            $table->integer('base_notation');
             $table->foreignId('grille_label_id')->constrained('grille_labels')->onDelete('cascade');
             $table->timestamps();
         });

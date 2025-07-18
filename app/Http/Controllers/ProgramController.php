@@ -1,10 +1,11 @@
 <?php
 namespace App\Http\Controllers;
 
-use App\Models\EvaluationCriteria;
-use App\Models\Program;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\Program;
+use App\Models\Document;
+use Illuminate\Http\Request;
+use App\Models\EvaluationCriteria;
 
 class ProgramController extends Controller
 {
@@ -194,17 +195,23 @@ class ProgramController extends Controller
             if ($field->field_type === 'file' && $request->hasFile($fieldName)) {
                 $file = $request->file($fieldName);
                 $path = $file->store(
-                    "documents/{$program->id}/{$fieldName}",
+                    "documents/{$program->title}-{$program->sigle}/{$fieldName}",
                     'public'
                 );
 
-                $formData[$fieldName] = [
-                    'path' => $path,
-                    'original_name' => $file->getClientOriginalName(),
-                    'mime_type' => $file->getClientMimeType(),
-                    'size' => $file->getSize(),
-                    'uploaded_at' => now()->toDateTimeString()
-                ];
+                // Document::create([
+                //     'application_id' => ,
+                //     'label' => "{$program->title}-{$program->sigle}",
+                //     'file_path' => $path,
+                // ]);
+
+                // $formData[$fieldName] = [
+                //     'path' => $path,
+                //     'original_name' => $file->getClientOriginalName(),
+                //     'mime_type' => $file->getClientMimeType(),
+                //     'size' => $file->getSize(),
+                //     'uploaded_at' => now()->toDateTimeString()
+                // ];
             } else {
                 // Pour les autres types de champs
                 $formData[$fieldName] = [
@@ -239,20 +246,29 @@ class ProgramController extends Controller
                 $lastNumber = (int) $matches[1];
             }
         }
-
+        
         $newNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT); // '0002'
-
+        
         $numCandidat = $program->sigle . '-' . $date . '-' . $newNumber;
-
+        
         $application = $program->applications()->create([
             'num_candidat' =>  $numCandidat,
             'user_id' => auth()->id(),
             'program_id' => $program->id,
-            'form_data' => $formData, // Conversion automatique en JSON via le cast
+            'form_data' => $formData,
             'submitted_at' => now(),
             'status' => 'pending',
         ]);
+        
+        if(isset($path)){
+            Document::create([
+                'application_id' => $application->id,
+                'label' => "{$program->title}-{$program->sigle}",
+                'file_path' => $path,
+            ]);
+        }
 
+        
         return redirect()
             ->route('program.show', $program->id)
             ->with('success', 'Votre candidature a été soumise avec succès!');

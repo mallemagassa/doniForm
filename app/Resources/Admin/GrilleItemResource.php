@@ -2,13 +2,14 @@
 
 namespace App\Resources\Admin;
 
-use App\Models\GrilleItem;
 use Inertia\Inertia;
+use App\Models\GrilleItem;
+use App\Models\GrilleLabel;
 use App\Resources\Resource;
+use Illuminate\Http\Request;
 use App\Resources\Builders\FormBuilder;
 use App\Resources\Builders\TableBuilder;
 use App\Resources\Concerns\HasResourceData;
-use App\Models\GrilleLabel;
 
 class GrilleItemResource extends Resource
 {
@@ -30,15 +31,16 @@ class GrilleItemResource extends Resource
     }
 
 
-    public static function index(): \Inertia\Response
+    public static function index(Request $request): \Inertia\Response
     {
         $table = (new TableBuilder(static::$model))
         ->column('titre', 'Titre')
-        ->column('note_1', 'Note 1')
-        ->column('note_2', 'Note 2')
-        ->column('note_3', 'Note 3')
-        ->column('grille_label_id', 'Grille Label Id')
-        ->make();
+        ->column('base_notation', 'Base Notation')
+        // ->column('note_1', 'Note 1')
+        // ->column('note_2', 'Note 2')
+        // ->column('note_3', 'Note 3')
+        ->column('grilleLabel.nom', 'Grille Label')
+        ->make($request);
 
         return Inertia::render(static::getComponentPath('index'), [
             'table' => $table,
@@ -57,19 +59,44 @@ class GrilleItemResource extends Resource
         ]);
     }
     
+    // public static function create(): \Inertia\Response
+    // {
+    //     $form = (new FormBuilder())
+    //     ->field('titre', 'text', ['required' => true])
+    //     ->field('base_notation', 'number', ['required' => true])
+    //     ->field('note_1', 'text', ['required' => true])
+    //     ->field('note_2', 'text', ['required' => true])
+    //     ->field('note_3', 'text', ['required' => true])
+    //     ->field('grille_label_id', 'select', [
+    //         'options' => GrilleLabel::pluck('nom', 'id'),
+    //         'required' => true
+    //     ])
+    //     // ->field('grille_label_id', 'text', ['required' => true])
+    //     ->make();
+
+    //     return Inertia::render(static::getComponentPath('create'), [
+    //         'form' => $form,
+    //         'resource' => static::getResourceData(),
+    //     ]);
+    // }
+
     public static function create(): \Inertia\Response
     {
         $form = (new FormBuilder())
-        ->field('titre', 'text', ['required' => true])
-        ->field('note_1', 'text', ['required' => true])
-        ->field('note_2', 'text', ['required' => true])
-        ->field('note_3', 'text', ['required' => true])
-        ->field('grille_label_id', 'select', [
-            'options' => GrilleLabel::pluck('nom', 'id'),
-            'required' => true
-        ])
-        // ->field('grille_label_id', 'text', ['required' => true])
-        ->make();
+            ->field('titre', 'text', ['required' => true])
+            ->field('base_notation', 'number', ['required' => true])
+            // ->field('notes', 'repeater', [
+            //     'fields' => [
+            //         ['name' => 'note', 'type' => 'number', 'required' => true, 'max' => 5]
+            //     ],
+            //     'required' => true,
+            //     'minItems' => 1
+            // ])
+            ->field('grille_label_id', 'select', [
+                'options' => GrilleLabel::pluck('nom', 'id'),
+                'required' => true
+            ])
+            ->make();
 
         return Inertia::render(static::getComponentPath('create'), [
             'form' => $form,
@@ -81,70 +108,180 @@ class GrilleItemResource extends Resource
     {
         $data = request()->validate([
             'titre' => 'string|required',
-            'note_1' => 'integer|max:5|required',
-            'note_2' => 'integer|max:5|required',
-            'note_3' => 'integer|max:5|required',
+            'base_notation' => 'integer|required',
+            'notes' => 'array|required',
+            'notes.*.note' => 'integer|max:5|required',
             'grille_label_id' => 'string|required',
-            
         ]);
 
-        static::$model::create($data);
+        // Création de l'item de grille
+        $grilleItem = static::$model::create([
+            'titre' => $data['titre'],
+            'base_notation' => $data['base_notation'],
+            'grille_label_id' => $data['grille_label_id']
+        ]);
+
+        // Création des notes associées
+        foreach ($data['notes'] as $noteData) {
+            $grilleItem->noteItems()->create([
+                'note' => $noteData['note']
+            ]);
+        }
 
         return redirect()->route(static::getRouteName('index'));
     }
 
+    // public static function store(): \Illuminate\Http\RedirectResponse
+    // {
+    //     $data = request()->validate([
+    //         'titre' => 'string|required',
+    //         'base_notation' => 'integer|required',
+    //         'note_1' => 'integer|max:5|required',
+    //         'note_2' => 'integer|max:5|required',
+    //         'note_3' => 'integer|max:5|required',
+    //         'grille_label_id' => 'string|required',
+            
+    //     ]);
+
+    //     static::$model::create($data);
+
+    //     return redirect()->route(static::getRouteName('index'));
+    // }
+
+    // public static function edit($id): \Inertia\Response
+    // {
+    //     $grilleitem = static::$model::findOrFail($id);
+
+    //     $form = (new FormBuilder())
+    //     ->field('titre', 'text', [
+    //                     'required' => true,
+    //                     'value' => $grilleitem->titre
+    //                 ])
+    //     ->field('base_notation', 'number', [
+    //                     'required' => true,
+    //                     'value' => $grilleitem->base_notation
+    //                 ])
+    //     ->field('note_1', 'text', [
+    //                     'required' => true,
+    //                     'value' => $grilleitem->note_1
+    //                 ])
+    //     ->field('note_2', 'text', [
+    //                     'required' => true,
+    //                     'value' => $grilleitem->note_2
+    //                 ])
+    //     ->field('note_3', 'text', [
+    //                     'required' => true,
+    //                     'value' => $grilleitem->note_3
+    //                 ])
+    //     ->field('grille_label_id', 'select', [
+    //                     'options' => GrilleLabel::pluck('nom', 'id'),
+    //                     'value' => $grilleitem->grille_label_id,
+    //                     'required' => true
+    //                 ])
+    //     ->make();
+
+    //     return Inertia::render(static::getComponentPath('edit'), [
+    //         'grilleitem' => $grilleitem,
+    //         'form' => $form,
+    //         'resource' => static::getResourceData($grilleitem),
+    //     ]);
+    // }
+
     public static function edit($id): \Inertia\Response
     {
-        $grilleitem = static::$model::findOrFail($id);
+        $grilleItem = static::$model::with('noteItems')->findOrFail($id);
 
         $form = (new FormBuilder())
-        ->field('titre', 'text', [
-                        'required' => true,
-                        'value' => $grilleitem->titre
-                    ])
-        ->field('note_1', 'text', [
-                        'required' => true,
-                        'value' => $grilleitem->note_1
-                    ])
-        ->field('note_2', 'text', [
-                        'required' => true,
-                        'value' => $grilleitem->note_2
-                    ])
-        ->field('note_3', 'text', [
-                        'required' => true,
-                        'value' => $grilleitem->note_3
-                    ])
-        ->field('grille_label_id', 'select', [
-                        'options' => GrilleLabel::pluck('nom', 'id'),
-                        'value' => $grilleitem->grille_label_id,
-                        'required' => true
-                    ])
-        ->make();
+            ->field('titre', 'text', [
+                'required' => true,
+                'value' => $grilleItem->titre
+            ])
+            ->field('base_notation', 'number', [
+                'required' => true,
+                'value' => $grilleItem->base_notation
+            ])
+            // ->field('notes', 'repeater', [
+            //     'fields' => [
+            //         ['name' => 'note', 'type' => 'number', 'required' => true, 'max' => 5]
+            //     ],
+            //     'value' => $grilleItem->noteItems->map(function($item) {
+            //         return ['note' => $item->note];
+            //     })->toArray(),
+            //     'required' => true,
+            //     'minItems' => 1
+            // ])
+            ->field('grille_label_id', 'select', [
+                'options' => GrilleLabel::pluck('nom', 'id'),
+                'value' => $grilleItem->grille_label_id,
+                'required' => true
+            ])
+            ->make();
 
         return Inertia::render(static::getComponentPath('edit'), [
-            'grilleitem' => $grilleitem,
+            'grilleItem' => $grilleItem,
             'form' => $form,
-            'resource' => static::getResourceData($grilleitem),
+            'resource' => static::getResourceData($grilleItem),
         ]);
     }
 
     public static function update($id): \Illuminate\Http\RedirectResponse
     {
-        $grilleitem = static::$model::findOrFail($id);
-    
+        $grilleItem = static::$model::with('noteItems')->findOrFail($id);
+        
         $data = request()->validate([
             'titre' => 'string|required',
-            'note_1' => 'integer|max:5|required',
-            'note_2' => 'integer|max:5|required',
-            'note_3' => 'integer|max:5|required',
-            'grille_label_id' => 'string|required',
-            
+            'base_notation' => 'integer|required',
+            'notes' => 'array|required',
+            'notes.*.note' => 'integer|max:5|required',
+            'grille_label_id' => 'numeric|required',
         ]);
-    
-        $grilleitem->update($data);
-    
+        
+        // Mise à jour de l'item principal
+        $grilleItem->update([
+            'titre' => $data['titre'],
+            'base_notation' => $data['base_notation'],
+            'grille_label_id' => $data['grille_label_id']
+        ]);
+        
+        // Synchronisation des notes
+        $currentNoteIds = $grilleItem->noteItems->pluck('id')->toArray();
+        $updatedNoteIds = [];
+        
+        foreach ($data['notes'] as $noteData) {
+            // Créer ou mettre à jour chaque note
+            $note = $grilleItem->noteItems()->updateOrCreate(
+                ['id' => $noteData['id'] ?? null],
+                ['note' => $noteData['note']]
+            );
+            $updatedNoteIds[] = $note->id;
+        }
+        
+        // Supprimer les notes qui ne sont plus présentes
+        $notesToDelete = array_diff($currentNoteIds, $updatedNoteIds);
+        if (!empty($notesToDelete)) {
+            $grilleItem->noteItems()->whereIn('id', $notesToDelete)->delete();
+        }
+        
         return redirect()->route(static::getRouteName('index'));
     }
+
+    // public static function update($id): \Illuminate\Http\RedirectResponse
+    // {
+    //     $grilleitem = static::$model::findOrFail($id);
+    
+    //     $data = request()->validate([
+    //         'titre' => 'string|required',
+    //         'note_1' => 'integer|max:5|required',
+    //         'note_2' => 'integer|max:5|required',
+    //         'note_3' => 'integer|max:5|required',
+    //         'grille_label_id' => 'string|required',
+            
+    //     ]);
+    
+    //     $grilleitem->update($data);
+    
+    //     return redirect()->route(static::getRouteName('index'));
+    // }
 
     public static function destroy($id): \Illuminate\Http\RedirectResponse
     {

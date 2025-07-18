@@ -2,13 +2,14 @@
 
 namespace App\Resources\Admin;
 
-use App\Models\Region;
 use Inertia\Inertia;
+use App\Models\Region;
+use App\Models\Program;
 use App\Resources\Resource;
+use Illuminate\Http\Request;
 use App\Resources\Builders\FormBuilder;
 use App\Resources\Builders\TableBuilder;
 use App\Resources\Concerns\HasResourceData;
-use App\Models\Program;
 
 class RegionResource extends Resource
 {
@@ -32,14 +33,14 @@ class RegionResource extends Resource
     }
 
 
-    public static function index(): \Inertia\Response
+    public static function index(Request $request): \Inertia\Response
     {
         $table = (new TableBuilder(static::$model))
         ->column('name', 'Nom')
         // ->column('description', 'Description')
         ->column('country', 'Pays')
         ->column('status', 'Status')
-        ->make();
+        ->make($request);
 
         return Inertia::render(static::getComponentPath('index'), [
             'table' => $table,
