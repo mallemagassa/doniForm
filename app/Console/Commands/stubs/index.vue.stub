@@ -114,11 +114,15 @@ const formattedColumns = computed(() => {
           </Button>
         </Link>
       </div>
-      <KizzaTable 
+      <KizzaTable
+        :key="tableKey"
         :data="table.records.data"
+        :meta="table.records.meta"
         :columns="formattedColumns"
         :routes="resource.routes"
-      />
+        :filterableColumns="filterable_columns"
+        :initialSearch="search"
+        :initialFilters="filters"
     </div>
   </AppLayout>
 </template>

@@ -209,6 +209,11 @@ const cancelEditing = () => {
   currentEditingIndex.value = null;
   noteForm.reset();
 };
+
+const tableKey = computed(() => {
+  return `${props.table.records.meta.current_page}-${props.table.records.meta.per_page}-${JSON.stringify(props.filters)}`;
+})
+
 </script>
 
 <template>
@@ -222,12 +227,23 @@ const cancelEditing = () => {
       <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold">{{ resource.label }}</h1>
       </div>
-      <KizzaTable 
+      <KizzaTable
+        :key="tableKey"
+        :data="table.records.data"
+        :meta="table.records.meta"
+        :columns="formattedColumns"
+        :routes="resource.routes"
+        :filterableColumns="filterable_columns"
+        :initialSearch="search"
+        :initialFilters="filters"
+        @row-click="onRowClick"
+        ></KizzaTable>
+      <!-- <KizzaTable 
         :data="table.records.data"
         :columns="formattedColumns"
         :routes="resource.routes"
         @row-click="onRowClick"
-      />
+      /> -->
     </div>
 
     <KizzaModal :open="!!selectedItem" @close="closeModal" :title="titleModal" size="xl">

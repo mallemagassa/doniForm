@@ -67,19 +67,24 @@ class ApplicationResource extends Resource
         ->column('program.title', 'Programme')
         ->column('submitted_at', 'Date de soumission')
         ->column('status', 'Statut')
+        // ->filterableColumn('num_candidat')
+        // ->filterableColumn('status')
         ->columnCallback('checked_items', 'Critères validés', function ($app) {
             $items = optional($app->program->evaluationCriteria)->evaluationCriteriaItems ?? collect();
             return $items->where('is_checked', true)->count().'/'.$items->count();
         })
         ->make($request);
 
+        // dd($table);
+
         return Inertia::render(static::getComponentPath('index'), [
             'table' => $table,
             'programs' => Program::all(['id', 'title']),
+            'filters' => $request->only(['search', 'filters']),
             'resource' => static::getResourceData(),
         ]);
     }
-    
+
     // public static function index(Request $request): \Inertia\Response
     // {
     //     // Récupération correcte des filtres
@@ -140,6 +145,7 @@ class ApplicationResource extends Resource
 
         return Inertia::render("{$panel}/Pages/" . Str::studly($page), [
             'table' => $table,
+            'filters' => $request->only(['search', 'filters']),
             'resource' => static::getResourceData(),
         ]);
     }

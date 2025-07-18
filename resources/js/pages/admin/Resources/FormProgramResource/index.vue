@@ -111,6 +111,9 @@ const formattedColumns = computed(() => {
 
   return [defaultSelectColumn, ...dynamicColumns, defaultActionsColumn];
 });
+const tableKey = computed(() => {
+  return `${props.table.records.meta.current_page}-${props.table.records.meta.per_page}-${JSON.stringify(props.filters)}`;
+})
 </script>
 
 <template>
@@ -125,11 +128,15 @@ const formattedColumns = computed(() => {
           </Button>
         </Link>
       </div>
-      <KizzaTable 
+      <KizzaTable
+        :key="tableKey"
         :data="table.records.data"
+        :meta="table.records.meta"
         :columns="formattedColumns"
         :routes="resource.routes"
-      />
+        :filterableColumns="filterable_columns"
+        :initialSearch="search"
+        :initialFilters="filters"></KizzaTable>
     </div>
   </AppLayout>
 </template>

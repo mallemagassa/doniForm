@@ -9,6 +9,8 @@ import { Checkbox } from '@/components/ui/checkbox'
 import DropdownAction from '@/components/ui/data-table/DataTableDemoColumn.vue'
 import Button from '@/components/ui/button/Button.vue';
 import { ArrowUpDown, ChevronDown } from 'lucide-vue-next'
+import { Input } from '@/components/ui/input'
+import { ref } from 'vue'
 
 interface User {
 name: string;
@@ -17,31 +19,9 @@ name: string;
   password: string;
   remember_token: string;
 }
-
-// const props = defineProps({
-//   table: {
-//     type: Object as () => {
-//       records: {
-//         data: User[]
-//       }
-//       columns: ColumnDef<User>[]
-//     },
-//     required: true
-//   },
-//   resource: {
-//     type: Object as () => {
-//       label: string
-//       routes: {
-//         edit: string
-//         destroy: string
-//         index: string
-//         create: string
-//       }
-//       relations?: Record<string, any>
-//     },
-//     required: true
-//   }
-// });
+const globalFilter = ref('')
+const search = ref(route().params.search || '')
+const filters = ref(route().params.filters || {})
 
 const props = defineProps({
   table: {
@@ -111,18 +91,29 @@ const formattedColumns = computed(() => {
   };
 
   const dynamicColumns = Object.entries(props.table.columns).map(([key, label]) => {
-      // Remplacer les underscores par des points pour l'accès aux données
       const originalKey = key.replace(/_/g, '.');
       const isRelation = originalKey.includes('.');
       
       return {
-          accessorKey: key, // Utiliser la clé transformée (avec underscore)
-          header: ({ column }) =>
-              h(Button, {
-                  variant: 'ghost',
-                  class: 'bg-[#2755a1] text-white',
-                  onClick: () => column.toggleSorting(column.getIsSorted() === 'asc'),
-              }, () => [label, h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
+          accessorKey: key,
+          header: ({ column }) => {
+              return h('div', { class: 'flex flex-col gap-1' }, [
+                  h(Button, {
+                      variant: 'ghost',
+                      class: 'bg-[#2755a1] text-white',
+                      onClick: () => column.toggleSorting(column.getIsSorted() === 'asc'),
+                  }, () => [label, h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
+                  // Ajout du champ de filtre pour les colonnes filtrables
+                  props.table.filterable_columns?.includes(key) 
+                    ? h(Input, {
+                        class: 'w-full',
+                        placeholder: 'Filtrer...',
+                        modelValue: column.getFilterValue(),
+                        'onUpdate:modelValue': value => column.setFilterValue(value),
+                      })
+                    : null
+              ]);
+          },
           cell: ({ row }) => {
               if (isRelation) {
                   return row.original[key] || 'N/A';
@@ -131,7 +122,6 @@ const formattedColumns = computed(() => {
           },
       };
   });
-
    const defaultActionsColumn = {
     id: 'actions',
     enableHiding: false,
@@ -152,6 +142,13 @@ const formattedColumns = computed(() => {
 
   return [defaultSelectColumn, ...dynamicColumns, defaultActionsColumn];
 });
+
+
+
+const tableKey = computed(() => {
+  return `${props.table.records.meta.current_page}-${props.table.records.meta.per_page}-${JSON.stringify(props.filters)}`;
+})
+
 </script>
 
 <template>
@@ -166,10 +163,15 @@ const formattedColumns = computed(() => {
           </Button>
         </Link>
       </div>
-      <KizzaTable 
+      <KizzaTable
+        :key="tableKey"
         :data="table.records.data"
+        :meta="table.records.meta"
         :columns="formattedColumns"
         :routes="resource.routes"
+        :filterableColumns="filterable_columns"
+        :initialSearch="search"
+        :initialFilters="filters"
       />
     </div>
   </AppLayout>

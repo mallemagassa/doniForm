@@ -5,6 +5,7 @@ namespace App\Resources\Builders;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 
 class TableBuilder
 {
@@ -14,6 +15,7 @@ class TableBuilder
     protected array $callbacks = [];
     protected array $relations = [];
     protected array $orders = [];
+    protected array $filterableColumns = [];
 
     public function __construct(string $modelClass)
     {
@@ -71,33 +73,80 @@ class TableBuilder
         return $this;
     }
 
-    public function make(): array
+    public function filterableColumn(string $column, \Closure $filterCallback = null): self
+    {
+        $this->filterableColumns[$column] = $filterCallback ?? function ($query, $value) use ($column) {
+            if (Str::contains($column, '.')) {
+                $relation = Str::beforeLast($column, '.');
+                $columnName = Str::afterLast($column, '.');
+                $query->whereHas($relation, fn ($q) => $q->where($columnName, 'like', "%{$value}%"));
+            } else {
+                $query->where($column, 'like', "%{$value}%");
+            }
+        };
+        return $this;
+    }
+
+    public function make(Request $request): array
     {
         $this->query->with($this->relations);
-
+    
+        // Filtre global
+        if ($request->filled('search')) {
+            $searchTerm = $request->input('search');
+            $this->query->where(function($q) use ($searchTerm) {
+                foreach ($this->filterableColumns as $column => $callback) {
+                    $callback($q, $searchTerm);
+                }
+            });
+        }
+        
+        // Filtres par colonne
+        foreach ($this->filterableColumns as $column => $callback) {
+            if ($request->filled("filters.{$column}")) {
+                $callback($this->query, $request->input("filters.{$column}"));
+            }
+        }
+    
+        // Gestion du tri
         foreach ($this->orders as $order) {
             $this->query->orderBy($order['column'], $order['direction']);
         }
-
-        $records = $this->query->paginate(100);
-
+    
+        $records = $this->query->paginate($request['per_page'] ?? 5);
+    
         $records->getCollection()->transform(function ($item) {
             foreach ($this->columns as $column => $label) {
                 if (Str::contains($column, '.')) {
                     $item->{$column} = data_get($item, $column);
                 }
             }
-
+    
             foreach ($this->callbacks as $key => $callback) {
                 $item->{$key} = $callback($item);
             }
-
+    
             return $item;
         });
-
+    
         return [
             'columns' => $this->columns,
-            'records' => $records
+            'filterable_columns' => array_keys($this->filterableColumns),
+            'records' => [
+                'data' => $records->items(),
+                'meta' => [
+                    'current_page' => $records->currentPage(),
+                    'last_page' => $records->lastPage(),
+                    'per_page' => $records->perPage(),
+                    'total' => $records->total(),
+                    'from' => $records->firstItem(),
+                    'to' => $records->lastItem(),
+                ],
+                'applied_filters' => [
+                    'search' => $request->input('search', ''),
+                    'column_filters' => $request->input('filters', [])
+                ]
+            ]
         ];
     }
 }

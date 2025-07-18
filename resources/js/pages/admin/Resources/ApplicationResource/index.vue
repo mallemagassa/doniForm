@@ -12,6 +12,11 @@ import { ArrowUpDown } from 'lucide-vue-next'
 import KizzaModal from '@/components/ui/KizzaModal.vue';
 import axios from 'axios'
 import { debounce } from 'lodash-es'
+import { Input } from '@/components/ui/input'
+
+const globalFilter = ref('')
+const search = ref(route().params.search || '')
+const filters = ref(route().params.filters || {})
 
 interface Application {
   user_id: string;
@@ -140,6 +145,9 @@ const props = defineProps({
   }
 });
 
+// console.log('props.table', props.table.records);
+
+
 const formattedColumns = computed(() => {
   const defaultSelectColumn = {
     id: 'select',
@@ -160,22 +168,33 @@ const formattedColumns = computed(() => {
     enableHiding: false,
   };
 
-  const dynamicColumns = Object.entries(props.table.columns ?? {}).map(([key, label]) => {
+  const dynamicColumns = Object.entries(props.table.columns).map(([key, label]) => {
       const originalKey = key.replace(/_/g, '.');
       const isRelation = originalKey.includes('.');
       
       return {
           accessorKey: key,
-          filterFn: 'includesString',
-          header: ({ column }) =>
-              h(Button, {
-                  variant: 'ghost',
-                  class: 'bg-[#2755a1] text-white',
-                  onClick: () => column.toggleSorting(column.getIsSorted() === 'asc'),
-              }, () => [label, h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
+          header: ({ column }) => {
+              return h('div', { class: 'flex flex-col gap-1' }, [
+                  h(Button, {
+                      variant: 'ghost',
+                      class: 'bg-[#2755a1] text-white',
+                      onClick: () => column.toggleSorting(column.getIsSorted() === 'asc'),
+                  }, () => [label, h(ArrowUpDown, { class: 'ml-2 h-4 w-4' })]),
+                  // Ajout du champ de filtre pour les colonnes filtrables
+                  props.table.filterable_columns?.includes(key) 
+                    ? h(Input, {
+                        class: 'w-full',
+                        placeholder: 'Filtrer...',
+                        modelValue: column.getFilterValue(),
+                        'onUpdate:modelValue': value => column.setFilterValue(value),
+                      })
+                    : null
+              ]);
+          },
           cell: ({ row }) => {
               if (isRelation) {
-                  return row.original[key] ?? 'N/A';
+                  return row.original[key] || 'N/A';
               }
               return row.getValue(key);
           },
@@ -202,7 +221,10 @@ const formattedColumns = computed(() => {
   return [defaultSelectColumn, ...dynamicColumns, defaultActionsColumn];
 });
 
-console.log(props.table)
+const tableKey = computed(() => {
+  return `${props.table.records.meta.current_page}-${props.table.records.meta.per_page}-${JSON.stringify(props.filters)}`;
+})
+
 </script>
 
 <template>
@@ -217,11 +239,17 @@ console.log(props.table)
           </Button>
         </div>
       </div>
-      <KizzaTable 
+      <KizzaTable
+        :key="tableKey"
         :data="table.records.data"
+        :meta="table.records.meta"
         :columns="formattedColumns"
         :routes="resource.routes"
+        :filterableColumns="filterable_columns"
+        :initialSearch="search"
+        :initialFilters="filters"
       />
+
 
       <!-- Dans votre template, avant le KizzaModal -->
     <div class="fixed inset-0 flex items-end px-4 py-6 pointer-events-none sm:p-6 sm:items-start z-50">

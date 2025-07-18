@@ -49,15 +49,18 @@ class UserResource extends Resource
         $table = (new TableBuilder(static::$model))
         ->column('name', 'Nom')
         ->column('email', 'Email')
+        // ->filterableColumn('name')
+        // ->filterableColumn('email')
         // ->column('email_verified_at', 'Email Verified At')
         // ->column('password', 'Password')
         // ->column('remember_token', 'Remember Token')
         ->make($request);
 
-        //viewAny user_resource
+        // dd($table);
 
         return  Inertia::render(static::getComponentPath('index'), [
             'table' => $table,
+            'filters' => $request->only(['search', 'filters']),
             'resource' => static::getResourceData(),
         ]);
     }
